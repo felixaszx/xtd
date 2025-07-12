@@ -80,9 +80,9 @@ namespace XTD_EXT_HPP_NAMESPACE
         }
 
         inline constexpr reference //
-        operator[](Idx idx) const
+        operator[](Idx idx) const noexcept
         {
-            return at(idx);
+            return span_[idx].elm_;
         }
 
         inline constexpr pointer //
