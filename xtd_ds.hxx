@@ -15,6 +15,7 @@
 #include <concepts>
 #include <numbers>
 #include <span>
+#include <type_traits>
 #include <unordered_set>
 
 // Helper data structure classes
@@ -122,7 +123,11 @@ namespace XTD_EXT_HPP_NAMESPACE
                 }
             }
 
-            std::destroy_at(&span_[idx].elm_);
+            if constexpr (std::is_compound_v<T> && !std::is_pointer_v<T>)
+            {
+                std::destroy_at(&span_[idx].elm_);
+            }
+
             span_[idx].next_ = next_;
             next_ = idx;
             return true;
@@ -156,19 +161,22 @@ namespace XTD_EXT_HPP_NAMESPACE
 
         inline constexpr ~jump_span()
         {
-            std::unordered_set<Idx> empty_set = {};
-            Idx next = next_;
-            while (next != std::numeric_limits<Idx>::max())
+            if constexpr (std::is_compound_v<T> && !std::is_pointer_v<T>)
             {
-                empty_set.insert(next);
-                next = span_[next].next_;
-            }
-
-            for (Idx i = 0; i < span_.size(); i++)
-            {
-                if (!empty_set.contains(i))
+                std::unordered_set<Idx> empty_set = {};
+                Idx next = next_;
+                while (next != std::numeric_limits<Idx>::max())
                 {
-                    std::destroy_at(&span_[i].elm_);
+                    empty_set.insert(next);
+                    next = span_[next].next_;
+                }
+
+                for (Idx i = 0; i < span_.size(); i++)
+                {
+                    if (!empty_set.contains(i))
+                    {
+                        std::destroy_at(&span_[i].elm_);
+                    }
                 }
             }
         }
