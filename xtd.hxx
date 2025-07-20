@@ -76,6 +76,7 @@ namespace XTD_EXT_HPP_NAMESPACE_CAPITAL
     using f64 = double;
 
     // atomic variants
+    using atomic_bool = std::atomic_bool;
     using atomic_i8 = std::atomic_int8_t;
     using atomic_u8 = std::atomic_uint8_t;
     using atomic_i16 = std::atomic_int16_t;
