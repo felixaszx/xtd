@@ -124,7 +124,7 @@ namespace XTD_EXT_HPP_NAMESPACE
     // retuns number of elements in a given array
     template <typename T>
         requires std::is_bounded_array_v<T>
-    inline consteval auto //
+    inline constexpr auto //
     elmsof [[nodiscard]] (const T& arr) noexcept
     {
         return sizeof(T) / sizeof(arr[0]);
