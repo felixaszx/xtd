@@ -295,7 +295,18 @@ namespace XTD_EXT_HPP_NAMESPACE::literals
     {
         return static_cast<std::uintmax_t>(i);
     }
+    
+    inline consteval float //
+    operator""_f32(long double i)
+    {
+        return static_cast<f32>(i);
+    }
 
+    inline consteval float //
+    operator""_f64(long double i)
+    {
+        return static_cast<f64>(i);
+    }
 }; // namespace XTD_EXT_HPP_NAMESPACE::literals
 
 #ifndef XTD_NO_MACROS
