@@ -23,7 +23,7 @@ Same as all other stl containers, except it will return a number indicating wher
 
 
 #### `bool erase(Idx idx)`
-You **MUST** use the number obtained form `emplace(...)` as the index otherwise the behaviour is undefined and can potentially be catastrophic. You may set `checking = true` in the template argument to prevent unexpected destructor calls on invalid elements. ##### Returns `bool`
+You **MUST** use the number obtained form `emplace(...)` as the index otherwise the behaviour is undefined and can potentially be catastrophic. You may set `checking = true` in the template argument to prevent unexpected destructor calls on invalid elements.
 ##### Returns `bool`
 - `false`: the index is invalid (only when `checking = true`)
 - `true`: operation successfull (always `true` when `checking = false`)
@@ -63,3 +63,7 @@ template <typename T, typename Idx = std::size_t, bool checking = true>
 
 ### Issues
 - Performance of the destructor can be bad when there are lots of empty slots
+
+
+## `xtd::replacing_erase`
+`replacing_erase` is a function that erase an element in any random accessible containers that follow `stl`'s style APIs. This works by replacing the target element with the last element and call `pop_back()`. This will give you constant time removal in a container when the order of the container does not matter. A.K.A. the container will only be used for traversal.

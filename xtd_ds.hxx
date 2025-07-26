@@ -12,6 +12,7 @@
 #ifndef XTD_DS_HXX
 #define XTD_DS_HXX
 
+#include <vector>
 #include <concepts>
 #include <numbers>
 #include <span>
@@ -181,6 +182,13 @@ namespace XTD_EXT_HPP_NAMESPACE
             }
         }
     };
+    
+    inline constexpr void //
+    replacing_erase(auto& container, size_t idx)
+    {
+        std::swap(container[idx], container.back());
+        container.pop_back();
+    }
 }; // namespace XTD_EXT_HPP_NAMESPACE
 
 #endif // XTD_DS_HXX
