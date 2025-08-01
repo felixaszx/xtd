@@ -162,7 +162,7 @@ namespace XTD_EXT_HPP_NAMESPACE
 
         inline constexpr ~jump_span()
         {
-            if constexpr (std::is_compound_v<T> && !std::is_pointer_v<T>)
+            if constexpr (!std::is_trivially_destructible_v<T>)
             {
                 std::unordered_set<Idx> empty_set = {};
                 Idx next = next_;
@@ -172,14 +172,11 @@ namespace XTD_EXT_HPP_NAMESPACE
                     next = span_[next].next_;
                 }
 
-                if constexpr (!std::is_trivially_destructible_v<T>)
+                for (Idx i = 0; i < span_.size(); i++)
                 {
-                    for (Idx i = 0; i < span_.size(); i++)
+                    if (!empty_set.contains(i))
                     {
-                        if (!empty_set.contains(i))
-                        {
-                            std::destroy_at(&span_[i].elm_);
-                        }
+                        std::destroy_at(&span_[i].elm_);
                     }
                 }
             }
