@@ -4,9 +4,9 @@
  * @brief Core defines and help tempaltes for xtd
  * @version 0.1
  * @date 2025-07-12
- * 
+ *
  * @copyright MIT License Copyright (c) 2025
- * 
+ *
  */
 
 #ifndef XTD_HXX
@@ -15,23 +15,17 @@
 #include <atomic>
 #include <chrono>
 #include <concepts>
-#include <expected>
 #include <filesystem>
-#include <fstream>
 #include <functional>
 #include <iostream>
 #include <memory_resource>
-#include <print>
 #include <ranges>
-#include <set>
 #include <source_location>
 #include <stdexcept>
 #include <string>
 #include <string_view>
 #include <thread>
-#include <unordered_set>
-#include <variant>
-#include <vector>
+#include <algorithm>
 
 #ifndef XTD_EXT_HPP_NAMESPACE
     #define XTD_EXT_HPP_NAMESPACE xtd
@@ -97,6 +91,9 @@ namespace XTD_EXT_HPP_NAMESPACE_CAPITAL
     using atomic_char32 = std::atomic_char32_t;
     using atomic_wchar = std::atomic_wchar_t;
 
+    template<typename T>
+    using ref_of = std::reference_wrapper<T>;
+
     inline const size_t DEFAULT_ALITNMENT = 16;
 }; // namespace XTD_EXT_HPP_NAMESPACE_CAPITAL
 
@@ -110,6 +107,12 @@ namespace XTD_EXT_HPP_NAMESPACE
         requires std::is_arithmetic_v<T>
     {
         return alignment * ((size - 1) / alignment) + alignment;
+    }
+
+    inline constexpr auto //
+    ceili [[nodiscard]] (const std::integral auto& dividend, const std::integral auto& divisor) noexcept
+    {
+        return dividend == 0 ? 0 : (dividend - 1) / divisor + 1;
     }
 
     template <typename T>
@@ -160,23 +163,22 @@ namespace XTD_EXT_HPP_NAMESPACE
     inline constexpr void //
     logln(const auto& msg = {})
     {
-        std::println("LOG: {}", msg);
+        std::cout << std::format("LOG: {}\n", msg);
     }
 
     inline constexpr void //
     errln(const auto& msg, std::source_location src = std::source_location::current())
     {
-        std::println(stderr,
-                     "\n{}:{}:{}:\nERROR: {}", //
-                     src.file_name(), src.line(),
-                     src.column(), //
-                     msg);
+        std::cerr << std::format("{}:{}:{}:\nERROR: {}\n", //
+                                 src.file_name(), src.line(),
+                                 src.column(), //
+                                 msg);
     }
 
     inline constexpr void //
     warnln(const auto& msg)
     {
-        std::println("WARNNING: {}", msg);
+        std::cout << std::format("WARNNING: {}\n", msg);
     }
 
     template <typename... F>
@@ -295,7 +297,7 @@ namespace XTD_EXT_HPP_NAMESPACE::literals
     {
         return static_cast<std::uintmax_t>(i);
     }
-    
+
     inline consteval float //
     operator""_f32(long double i)
     {
