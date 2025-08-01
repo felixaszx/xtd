@@ -150,8 +150,8 @@ namespace XTD_EXT_HPP_NAMESPACE
         }
 
         inline constexpr jump_span(std::byte* data, Idx elm_size)
-            : span_((jump_span_elm*)(data), elm_size),
-              next_(0)
+            : next_(0),
+              span_((jump_span_elm*)(data), elm_size)
         {
             for (Idx i = 0; i < elm_size; i++)
             {
@@ -185,7 +185,7 @@ namespace XTD_EXT_HPP_NAMESPACE
             }
         }
     };
-    
+
     inline constexpr void //
     replacing_erase(auto& container, size_t idx)
     {
