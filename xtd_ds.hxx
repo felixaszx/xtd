@@ -172,11 +172,14 @@ namespace XTD_EXT_HPP_NAMESPACE
                     next = span_[next].next_;
                 }
 
-                for (Idx i = 0; i < span_.size(); i++)
+                if constexpr (!std::is_trivially_destructible_v<T>)
                 {
-                    if (!empty_set.contains(i))
+                    for (Idx i = 0; i < span_.size(); i++)
                     {
-                        std::destroy_at(&span_[i].elm_);
+                        if (!empty_set.contains(i))
+                        {
+                            std::destroy_at(&span_[i].elm_);
+                        }
                     }
                 }
             }
