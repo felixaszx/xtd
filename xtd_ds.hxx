@@ -137,7 +137,7 @@ namespace XTD_EXT_HPP_NAMESPACE
                 }
             }
 
-            if constexpr (std::is_compound_v<T> && !std::is_pointer_v<T>)
+            if constexpr (!std::is_trivially_destructible_v<T>)
             {
                 std::destroy_at(&c_[idx].elm_);
             }
