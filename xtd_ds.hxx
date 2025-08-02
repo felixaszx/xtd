@@ -22,15 +22,27 @@
 // Helper data structure classes
 namespace XTD_EXT_HPP_NAMESPACE
 {
-    template <typename T, typename Idx = std::size_t, bool checking = true>
+    template <typename T, typename Idx>
         requires std::unsigned_integral<Idx> && //
                  (sizeof(T) >= sizeof(Idx))
-    class jump_span
+    struct jump_array_elm
+    {
+        Idx next_ = std::numeric_limits<Idx>::max();
+        T elm_;
+    };
+
+    template <typename T,
+              typename Idx = std::size_t,
+              typename C = std::vector<jump_array_elm<T, Idx>>,
+              bool checking = true>
+        requires std::unsigned_integral<Idx> && //
+                 (sizeof(T) >= sizeof(Idx))
+    class jump_array
     {
         // enable check will have high overhead
       public:
         using value_type = T;
-        using size_type = std::size_t;
+        using size_type = Idx;
         using difference_type = std::ptrdiff_t;
         using pointer = T*;
         using const_pointer = const T*;
@@ -38,20 +50,15 @@ namespace XTD_EXT_HPP_NAMESPACE
         using const_reference = const T&;
 
       private:
-        struct jump_span_elm
-        {
-            Idx next_ = std::numeric_limits<Idx>::max();
-            T elm_;
-        };
-
         Idx next_ = 0;
-        std::span<jump_span_elm> span_ = nullptr;
+        Idx size_ = 0;
+        C c_ = nullptr;
 
       public:
         inline constexpr bool //
         occupied [[nodiscard]] (Idx idx) const
         {
-            if (idx >= span_.size())
+            if (idx >= c_.size())
             {
                 return false;
             }
@@ -63,7 +70,7 @@ namespace XTD_EXT_HPP_NAMESPACE
                 {
                     return false;
                 }
-                next = span_[next].next_;
+                next = c_[next].next_;
             }
             return true;
         }
@@ -78,25 +85,31 @@ namespace XTD_EXT_HPP_NAMESPACE
                     throw std::invalid_argument("This index is refereing to an unoccupied position");
                 }
             }
-            return span_[idx].elm_;
+            return c_[idx].elm_;
         }
 
         inline constexpr reference //
         operator[](Idx idx) const noexcept
         {
-            return span_[idx].elm_;
+            return c_[idx].elm_;
         }
 
         inline constexpr pointer //
         data() const noexcept
         {
-            return reinterpret_cast<pointer>(span_.data());
+            return reinterpret_cast<pointer>(c_.data());
         }
 
         inline constexpr size_type //
         size() const noexcept
         {
-            return span_.size();
+            return size_;
+        }
+
+        inline constexpr size_type //
+        capacity() const noexcept
+        {
+            return c_.size();
         }
 
         inline constexpr size_type //
@@ -107,7 +120,7 @@ namespace XTD_EXT_HPP_NAMESPACE
             while (next != std::numeric_limits<Idx>::max())
             {
                 remaining++;
-                next = span_[next].next_;
+                next = c_[next].next_;
             }
 
             return remaining;
@@ -126,12 +139,28 @@ namespace XTD_EXT_HPP_NAMESPACE
 
             if constexpr (std::is_compound_v<T> && !std::is_pointer_v<T>)
             {
-                std::destroy_at(&span_[idx].elm_);
+                std::destroy_at(&c_[idx].elm_);
             }
 
-            span_[idx].next_ = next_;
+            c_[idx].next_ = next_;
             next_ = idx;
+            size_--;
             return true;
+        }
+
+        inline constexpr void //
+        expand()
+        {
+            Idx old_size = c_.size();
+            c_.resize(old_size * 2);
+
+            for (Idx i = old_size; i < c_.size(); i++)
+            {
+                c_[i].next_ = i + 1;
+            }
+
+            c_[c_.size() - 1].next_ = next_;
+            next_ = old_size;
         }
 
         template <class... Args>
@@ -140,27 +169,29 @@ namespace XTD_EXT_HPP_NAMESPACE
         {
             if (next_ == std::numeric_limits<Idx>::max())
             {
-                return std::numeric_limits<Idx>::max();
+                expand();
             }
 
             Idx curr = next_;
-            next_ = span_[curr].next_;
-            std::construct_at(&span_[curr].elm_, std::forward<Args>(args)...);
+            next_ = c_[curr].next_;
+            std::construct_at(&c_[curr].elm_, std::forward<Args>(args)...);
+
+            size_++;
             return curr;
         }
 
-        inline constexpr jump_span(std::byte* data, Idx elm_size)
+        inline constexpr jump_array(Idx elm_size = 4)
             : next_(0),
-              span_((jump_span_elm*)(data), elm_size)
+              c_(elm_size)
         {
             for (Idx i = 0; i < elm_size; i++)
             {
-                span_[i].next_ = i + 1;
+                c_[i].next_ = i + 1;
             }
-            span_[elm_size - 1].next_ = std::numeric_limits<Idx>::max();
+            c_[elm_size - 1].next_ = std::numeric_limits<Idx>::max();
         }
 
-        inline constexpr ~jump_span()
+        inline constexpr ~jump_array()
         {
             if constexpr (!std::is_trivially_destructible_v<T>)
             {
@@ -169,14 +200,14 @@ namespace XTD_EXT_HPP_NAMESPACE
                 while (next != std::numeric_limits<Idx>::max())
                 {
                     empty_set.insert(next);
-                    next = span_[next].next_;
+                    next = c_[next].next_;
                 }
 
-                for (Idx i = 0; i < span_.size(); i++)
+                for (Idx i = 0; i < c_.size(); i++)
                 {
                     if (!empty_set.contains(i))
                     {
-                        std::destroy_at(&span_[i].elm_);
+                        std::destroy_at(&c_[i].elm_);
                     }
                 }
             }
