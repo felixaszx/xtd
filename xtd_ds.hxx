@@ -126,6 +126,14 @@ namespace XTD_EXT_HPP_NAMESPACE
             return remaining;
         }
 
+        inline constexpr void //
+        clear()
+        {
+            size_ = 0;
+            next_ = 0;
+            c_.clear();
+        }
+
         inline constexpr bool //
         erase(Idx idx)
         {
