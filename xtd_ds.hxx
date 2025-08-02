@@ -25,7 +25,7 @@ namespace XTD_EXT_HPP_NAMESPACE
     template <typename T, typename Idx>
         requires std::unsigned_integral<Idx> && //
                  (sizeof(T) >= sizeof(Idx))
-    struct jump_array_elm
+    union jump_array_elm
     {
         Idx next_ = std::numeric_limits<Idx>::max();
         T elm_;
