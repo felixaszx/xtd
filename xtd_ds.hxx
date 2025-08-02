@@ -76,7 +76,7 @@ namespace XTD_EXT_HPP_NAMESPACE
         }
 
         inline constexpr reference // enable check will have high overhead
-        at(Idx idx) const
+        at(Idx idx)
         {
             if constexpr (checking)
             {
@@ -89,7 +89,7 @@ namespace XTD_EXT_HPP_NAMESPACE
         }
 
         inline constexpr reference //
-        operator[](Idx idx) const noexcept
+        operator[](Idx idx) noexcept
         {
             return c_[idx].elm_;
         }
