@@ -16,6 +16,7 @@
 #include <chrono>
 #include <concepts>
 #include <filesystem>
+#include <print>
 #include <functional>
 #include <iostream>
 #include <memory_resource>
@@ -60,7 +61,7 @@ namespace XTD_EXT_HPP_NAMESPACE_CAPITAL
     using ssz = ssize_t;
     using ptr_diff = ptrdiff_t;
 
-    using char8 = char;
+    using char8 = char8_t;
     using uchar8 = unsigned char;
     using char16 = char16_t;
     using char32 = char32_t;
@@ -91,15 +92,16 @@ namespace XTD_EXT_HPP_NAMESPACE_CAPITAL
     using atomic_char32 = std::atomic_char32_t;
     using atomic_wchar = std::atomic_wchar_t;
 
-    template<typename T>
+    template <typename T>
     using ref_of = std::reference_wrapper<T>;
 
-    inline const size_t DEFAULT_ALITNMENT = 16;
 }; // namespace XTD_EXT_HPP_NAMESPACE_CAPITAL
 
 namespace XTD_EXT_HPP_NAMESPACE
 {
     using namespace XTD_EXT_HPP_NAMESPACE_CAPITAL;
+
+    inline const size_t DEFAULT_ALITNMENT = 16;
 
     template <typename T>
     inline constexpr auto //
@@ -142,10 +144,19 @@ namespace XTD_EXT_HPP_NAMESPACE
 
     // returns number of bytes in a given array base container
     inline constexpr auto //
-    sizeof2 [[nodiscard]] (const sizeof2_compatible auto& container)
+    sizeof2 [[nodiscard]] (const sizeof2_compatible auto&& container)
     {
         using T = std::remove_cvref_t<decltype(container)>;
-        return sizeof(typename T::value_type) * container.size();
+        return sizeof(typename T::value_type) * std::forward<T>(container).size();
+    }
+
+    // returns number of bytes in a given array base container
+    template <typename T>
+        requires(std::is_bounded_array_v<T>)
+    inline constexpr auto //
+    sizeof2 [[nodiscard]] (T&& container)
+    {
+        return sizeof(std::forward<T>(container));
     }
 
     template <typename T>
@@ -160,26 +171,50 @@ namespace XTD_EXT_HPP_NAMESPACE
         requires std::is_floating_point_v<T>
     inline constexpr T inf_v = std::numeric_limits<T>::infinity();
 
-    inline constexpr void //
-    logln(const auto& msg = {})
+    template <typename... Args>
+    struct logln
     {
-        std::cout << std::format("LOG: {}\n", msg);
-    }
+        inline constexpr //
+            logln(std::string_view format, Args&&... msg, std::source_location src = std::source_location::current())
+        {
+            std::println("[{}] {} ({}:{}:{})", "LOG",                         //
+                         std::vformat(format, std::make_format_args(msg...)), //
+                         src.file_name(), src.line(), src.column());
+        }
+    };
 
-    inline constexpr void //
-    errln(const auto& msg, std::source_location src = std::source_location::current())
+    template <typename... Args>
+    struct errln
     {
-        std::cerr << std::format("{}:{}:{}:\nERROR: {}\n", //
-                                 src.file_name(), src.line(),
-                                 src.column(), //
-                                 msg);
-    }
+        inline constexpr //
+            errln(std::string_view format, Args&&... msg, std::source_location src = std::source_location::current())
+        {
+            std::println(stderr, "[{}] {} ({}:{}:{})", "ERROR",               //
+                         std::vformat(format, std::make_format_args(msg...)), //
+                         src.file_name(), src.line(), src.column());
+        }
+    };
 
-    inline constexpr void //
-    warnln(const auto& msg)
+    template <typename... Args>
+    struct warnln
     {
-        std::cout << std::format("WARNNING: {}\n", msg);
-    }
+        inline constexpr //
+            warnln(std::string_view format, Args&&... msg, std::source_location src = std::source_location::current())
+        {
+            std::println("[{}] {} ({}:{}:{})", "WARNING",                     //
+                         std::vformat(format, std::make_format_args(msg...)), //
+                         src.file_name(), src.line(), src.column());
+        }
+    };
+
+    template <typename... Args> //
+    logln(std::string_view, Args&&...) -> logln<Args...>;
+
+    template <typename... Args> //
+    errln(std::string_view, Args&&...) -> errln<Args...>;
+
+    template <typename... Args> //
+    warnln(std::string_view, Args&&...) -> warnln<Args...>;
 
     template <typename... F>
     inline constexpr i_::overload_call_t<F...> //
@@ -187,7 +222,6 @@ namespace XTD_EXT_HPP_NAMESPACE
     {
         return i_::overload_call_t{std::forward<F>(funcs)...};
     }
-
 }; // namespace XTD_EXT_HPP_NAMESPACE
 
 namespace XTD_EXT_HPP_NAMESPACE::literals
@@ -309,23 +343,56 @@ namespace XTD_EXT_HPP_NAMESPACE::literals
     {
         return static_cast<f64>(i);
     }
-}; // namespace XTD_EXT_HPP_NAMESPACE::literals
 
-#ifndef XTD_NO_MACROS
-    #define castc(to, from) const_cast<to>(from)
-    #define castd(to, from) dynamic_cast<to>(from)
-    #define castr(to, from) reinterpret_cast<to>(from)
-    #define casts(to, from) static_cast<to>(from)
-    #define castf(to, from) ((to)(from))
-#endif
+    template <typename To, typename From>
+    inline constexpr To //
+    castc(From&& from)
+    {
+        return const_cast<To>(std::forward<From>(from));
+    }
+
+    template <typename To, typename From>
+    inline constexpr To //
+    castd(From&& from)
+    {
+        return dynamic_cast<To>(std::forward<From>(from));
+    }
+
+    template <typename To, typename From>
+    inline constexpr To //
+    castr(From&& from)
+    {
+        return reinterpret_cast<To>(std::forward<From>(from));
+    }
+
+    template <typename To, typename From>
+    inline constexpr To //
+    casts(From&& from)
+    {
+        return static_cast<To>(std::forward<From>(from));
+    }
+
+    template <typename To, typename From>
+    inline constexpr To //
+    castf(From&& from)
+    {
+        return ((To)(std::forward<From>(from)));
+    }
+}; // namespace XTD_EXT_HPP_NAMESPACE::literals
 
 #ifndef XTD_NO_DATA_STRUCTURES
     #include "xtd_ds.hxx"
 #endif
 
 #ifndef XTD_NO_NAMESPACE
-using namespace XTD_EXT_HPP_NAMESPACE;
+using namespace XTD_EXT_HPP_NAMESPACE_CAPITAL;
 using namespace XTD_EXT_HPP_NAMESPACE::literals;
+
+// deault all ranges algorithm
+namespace xtd
+{
+    using namespace std::ranges;
+};
 #endif
 
 #endif // XTD_HXX

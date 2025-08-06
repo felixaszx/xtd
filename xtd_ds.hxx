@@ -28,13 +28,13 @@ namespace XTD_EXT_HPP_NAMESPACE
     union jump_array_elm
     {
         Idx next_ = std::numeric_limits<Idx>::max();
-        T elm_;
+        std::byte elm_[sizeof(T)];
     };
 
     template <typename T,
               typename Idx = std::size_t,
               typename C = std::vector<jump_array_elm<T, Idx>>,
-              bool checking = true>
+              bool checking = false>
         requires std::unsigned_integral<Idx> && //
                  (sizeof(T) >= sizeof(Idx))
     class jump_array
@@ -75,23 +75,25 @@ namespace XTD_EXT_HPP_NAMESPACE
             return true;
         }
 
-        inline constexpr reference // enable check will have high overhead
-        at(Idx idx)
+        template <typename S>
+        inline constexpr auto& // enable check will have high overhead
+        at(this S&& self, Idx idx)
         {
             if constexpr (checking)
             {
-                if (!occupied(idx))
+                if (!self.occupied(idx))
                 {
                     throw std::invalid_argument("This index is refereing to an unoccupied position");
                 }
             }
-            return c_[idx].elm_;
+            return *(T*)(std::forward<S>(self).c_[idx].elm_);
         }
 
-        inline constexpr reference //
-        operator[](Idx idx) noexcept
+        template <typename S>
+        inline constexpr auto& //
+        operator[](this S&& self, Idx idx) noexcept
         {
-            return c_[idx].elm_;
+            return *(T*)(std::forward<S>(self).c_[idx].elm_);
         }
 
         inline constexpr pointer //
@@ -129,8 +131,27 @@ namespace XTD_EXT_HPP_NAMESPACE
         inline constexpr void //
         clear()
         {
+            if constexpr (!std::is_trivially_destructible_v<T>)
+            {
+                std::unordered_set<Idx> empty_set = {};
+                Idx next = next_;
+                while (next != std::numeric_limits<Idx>::max())
+                {
+                    empty_set.insert(next);
+                    next = c_[next].next_;
+                }
+
+                for (Idx i = 0; i < c_.size(); i++)
+                {
+                    if (!empty_set.contains(i))
+                    {
+                        std::destroy_at(reinterpret_cast<T*>(c_[i].elm_));
+                    }
+                }
+            }
+
             size_ = 0;
-            next_ = 0;
+            next_ = std::numeric_limits<Idx>::max();
             c_.clear();
         }
 
@@ -147,7 +168,7 @@ namespace XTD_EXT_HPP_NAMESPACE
 
             if constexpr (!std::is_trivially_destructible_v<T>)
             {
-                std::destroy_at(&c_[idx].elm_);
+                std::destroy_at(reinterpret_cast<T*>(c_[idx].elm_));
             }
 
             c_[idx].next_ = next_;
@@ -159,16 +180,38 @@ namespace XTD_EXT_HPP_NAMESPACE
         inline constexpr void //
         expand()
         {
+            expand_to(c_.size() == 0 ? 1 : c_.size() * 2);
+        }
+
+        inline constexpr void //
+        expand_to(Idx size)
+        {
+            if (size <= c_.size())
+            {
+                return;
+            }
+
             Idx old_size = c_.size();
-            c_.resize(old_size * 2);
+            c_.resize(size);
 
             for (Idx i = old_size; i < c_.size(); i++)
             {
                 c_[i].next_ = i + 1;
             }
+            c_[c_.size() - 1].next_ = std::numeric_limits<Idx>::max();
 
-            c_[c_.size() - 1].next_ = next_;
-            next_ = old_size;
+            Idx next = next_;
+            while (next != std::numeric_limits<Idx>::max() && c_[next].next_ != std::numeric_limits<Idx>::max())
+            {
+                next = c_[next].next_;
+            }
+
+            if (next == std::numeric_limits<Idx>::max())
+            {
+                next_ = old_size;
+                return;
+            }
+            c_[next].next_ = old_size;
         }
 
         template <class... Args>
@@ -182,7 +225,7 @@ namespace XTD_EXT_HPP_NAMESPACE
 
             Idx curr = next_;
             next_ = c_[curr].next_;
-            std::construct_at(&c_[curr].elm_, std::forward<Args>(args)...);
+            std::construct_at(reinterpret_cast<T*>(c_[curr].elm_), std::forward<Args>(args)...);
 
             size_++;
             return curr;
@@ -196,36 +239,28 @@ namespace XTD_EXT_HPP_NAMESPACE
             {
                 c_[i].next_ = i + 1;
             }
-            c_[elm_size - 1].next_ = std::numeric_limits<Idx>::max();
-        }
 
-        inline constexpr ~jump_array()
-        {
-            if constexpr (!std::is_trivially_destructible_v<T>)
+            if (elm_size > 0)
             {
-                std::unordered_set<Idx> empty_set = {};
-                Idx next = next_;
-                while (next != std::numeric_limits<Idx>::max())
-                {
-                    empty_set.insert(next);
-                    next = c_[next].next_;
-                }
-
-                for (Idx i = 0; i < c_.size(); i++)
-                {
-                    if (!empty_set.contains(i))
-                    {
-                        std::destroy_at(&c_[i].elm_);
-                    }
-                }
+                c_[elm_size - 1].next_ = std::numeric_limits<Idx>::max();
+            }
+            else
+            {
+                next_ = std::numeric_limits<Idx>::max();
             }
         }
+
+        inline constexpr ~jump_array() { clear(); }
     };
 
     inline constexpr void //
     replacing_erase(auto& container, size_t idx)
     {
-        std::swap(container[idx], container.back());
+        std::byte tmp[sizeof(container[0])];
+        memcpy(tmp, &container[idx], sizeof(tmp));
+        memcpy(&container[idx], &container.back(), sizeof(tmp));
+        memcpy(&container.back(), tmp, sizeof(tmp));
+
         container.pop_back();
     }
 }; // namespace XTD_EXT_HPP_NAMESPACE
