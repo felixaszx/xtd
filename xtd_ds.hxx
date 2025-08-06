@@ -96,10 +96,11 @@ namespace XTD_EXT_HPP_NAMESPACE
             return *(T*)(std::forward<S>(self).c_[idx].elm_);
         }
 
-        inline constexpr pointer //
-        data() const noexcept
+        template <typename S>
+        inline constexpr auto //
+        data(this S&& self) noexcept
         {
-            return reinterpret_cast<pointer>(c_.data());
+            return *(T*)(std::forward<S>(self).c_.data());
         }
 
         inline constexpr size_type //
