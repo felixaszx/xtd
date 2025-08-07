@@ -56,7 +56,7 @@ namespace XTD_EXT_HPP_NAMESPACE
 
       public:
         inline constexpr bool //
-        occupied [[nodiscard]] (Idx idx) const
+        contains [[nodiscard]] (Idx idx) const
         {
             if (idx >= c_.size())
             {
@@ -113,20 +113,6 @@ namespace XTD_EXT_HPP_NAMESPACE
         capacity() const noexcept
         {
             return c_.size();
-        }
-
-        inline constexpr size_type //
-        remain_slots() const noexcept
-        {
-            size_type remaining = 0;
-            Idx next = next_;
-            while (next != std::numeric_limits<Idx>::max())
-            {
-                remaining++;
-                next = c_[next].next_;
-            }
-
-            return remaining;
         }
 
         inline constexpr void //
