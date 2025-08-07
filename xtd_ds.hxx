@@ -33,7 +33,7 @@ namespace XTD_EXT_HPP_NAMESPACE
 
     template <typename T,
               typename Idx = std::size_t,
-              typename C = std::vector<jump_array_elm<T, Idx>>,
+              typename C = std::pmr::vector<jump_array_elm<T, Idx>>,
               bool checking = false>
         requires std::unsigned_integral<Idx> && //
                  (sizeof(T) >= sizeof(Idx))
@@ -52,7 +52,7 @@ namespace XTD_EXT_HPP_NAMESPACE
       private:
         Idx next_ = 0;
         Idx size_ = 0;
-        C c_ = nullptr;
+        C c_ = {};
 
       public:
         inline constexpr bool //
@@ -232,23 +232,14 @@ namespace XTD_EXT_HPP_NAMESPACE
             return curr;
         }
 
-        inline constexpr jump_array(Idx elm_size = 4)
+        template <typename... CArgs>
+        inline constexpr jump_array(CArgs... container_args)
             : next_(0),
-              c_(elm_size)
+              c_(std::forward<CArgs>(container_args)...)
         {
-            for (Idx i = 0; i < elm_size; i++)
-            {
-                c_[i].next_ = i + 1;
-            }
-
-            if (elm_size > 0)
-            {
-                c_[elm_size - 1].next_ = std::numeric_limits<Idx>::max();
-            }
-            else
-            {
-                next_ = std::numeric_limits<Idx>::max();
-            }
+            c_.resize(1);
+            c_[0].next_ = std::numeric_limits<Idx>::max();
+            next_ = 0;
         }
 
         inline constexpr ~jump_array() { clear(); }
