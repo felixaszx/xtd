@@ -102,11 +102,10 @@ namespace XTD_EXT_HPP_NAMESPACE
     };
 
     constexpr void //
-    replacing_erase(auto& container, std::size_t idx);
+    replacing_erase(auto& container, size_t idx);
 
-    template <typename T, typename Idx = std::size_t>
-        requires std::is_default_constructible_v<T> && //
-                 std::unsigned_integral<Idx> && (sizeof(T) >= sizeof(Idx))
+    template <typename T>
+        requires std::is_default_constructible_v<T>
     struct tree_array
     {
       public:
@@ -115,8 +114,8 @@ namespace XTD_EXT_HPP_NAMESPACE
             friend tree_array;
 
           private:
-            Idx parent_ = std::numeric_limits<Idx>::max();
-            Idx children_ = std::numeric_limits<Idx>::max();
+            std::size_t parent_ = std::numeric_limits<std::size_t>::max();
+            std::size_t children_ = std::numeric_limits<std::size_t>::max();
 
           public:
             T data_ = {};
@@ -129,81 +128,81 @@ namespace XTD_EXT_HPP_NAMESPACE
         };
 
       protected:
-        jump_array<node, Idx> nodes_ = {};
-        jump_array<std::pmr::deque<Idx>, Idx> children_ = {};
+        jump_array<node, std::size_t> nodes_ = {};
+        jump_array<std::pmr::deque<std::size_t>, std::size_t> children_ = {};
         mutable std::pmr::memory_resource* mem_res_ = nullptr;
 
         constexpr void //
-        clear_parent(Idx node);
+        clear_parent(std::size_t node);
 
         constexpr void //
-        reset_children(Idx node);
+        reset_children(std::size_t node);
 
       public:
         constexpr //
             tree_array(std::pmr::memory_resource* mem_res = std::pmr::new_delete_resource());
 
         template <typename... Args>
-        constexpr Idx // return node index
+        constexpr std::size_t // return node index
         emplace [[nodiscard]] (Args&&... args);
 
-        constexpr bool // very expensive when node is not std::numeric_limits<Idx>::max()!
-        containes(Idx node) const;
+        constexpr bool // very expensive when node is not std::numeric_limits<std::size_t>::max()!
+        containes(std::size_t node) const;
 
-        constexpr Idx //
+        constexpr std::size_t //
         size() const;
 
         template <typename S>
         constexpr auto& // mostly used internally
-        get(this S&& self, Idx node);
+        get(this S&& self, std::size_t node);
 
         constexpr void //
-        erase(Idx node);
+        erase(std::size_t node);
 
-        constexpr Idx //
-        has_parent(Idx node) const;
+        constexpr std::size_t //
+        has_parent(std::size_t node) const;
 
-        constexpr Idx //
-        get_parent(Idx node) const;
+        constexpr std::size_t //
+        get_parent(std::size_t node) const;
 
         constexpr bool //
-        has_children(Idx node) const;
+        has_children(std::size_t node) const;
 
-        constexpr const std::pmr::deque<Idx>& //
-        get_children(Idx node) const;
-
-        constexpr void //
-        add_child(Idx at, Idx child);
+        constexpr const std::pmr::deque<std::size_t>& //
+        get_children(std::size_t node) const;
 
         constexpr void //
-        reset_parent(Idx node);
+        add_child(std::size_t at, std::size_t child);
 
-        constexpr Idx // linear search, return index in children array
-        find_child(Idx at, Idx child) const;
+        constexpr void //
+        reset_parent(std::size_t node);
 
-        constexpr Idx //
-        expand_to(Idx to);
+        constexpr std::size_t // linear search, return index in children array
+        find_child(std::size_t at, std::size_t child) const;
 
-        constexpr std::vector<Idx> //
-        sort [[nodiscard]] (Idx at) const;
+        constexpr std::size_t //
+        expand_to(std::size_t to);
+
+        constexpr std::vector<std::size_t> //
+        sort [[nodiscard]] (std::size_t at) const;
 
         template <typename S, typename F>
-            requires std::invocable<F, Idx, tree_array&>
+            requires std::invocable<F, std::size_t, tree_array&>
         constexpr void //
-        traverse(this S&& self, Idx at, F&& callback);
+        traverse(this S&& self, std::size_t at, F&& callback);
 
         constexpr void //
         clear();
 
         constexpr void // very expensive!
-        cut(Idx at);
+        cut(std::size_t at);
 
-        constexpr Idx // very expensive!, node 0 will always be root, return the index of new root
-        insert(Idx to, const tree_array& tree, Idx from)
+        constexpr std::size_t // very expensive!, node 0 will always be root, return the index of new root
+        insert(std::size_t to, const tree_array& tree, std::size_t from)
             requires std::is_copy_constructible_v<T>;
 
-        constexpr Idx // node 0 will always be root, return the index of new root
-        take(Idx to, tree_array& tree, Idx from)
+        constexpr std::size_t // node 0 will always be root, return the index of new root
+        take(std::size_t to, tree_array& tree, std::size_t from)
             requires std::is_move_constructible_v<T>;
     };
 

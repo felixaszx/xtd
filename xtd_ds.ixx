@@ -205,7 +205,7 @@ inline constexpr bool //
 }
 
 inline constexpr void //
-replacing_erase(auto& container, std::size_t idx)
+replacing_erase(auto& container, size_t idx)
 {
     std::byte tmp[sizeof(container[0])];
     memcpy(tmp, &container[idx], sizeof(tmp));
@@ -215,28 +215,26 @@ replacing_erase(auto& container, std::size_t idx)
     container.pop_back();
 }
 
-template <typename T, typename Idx>
-    requires std::is_default_constructible_v<T> && //
-             std::unsigned_integral<Idx> &&
-             (sizeof(T) >= sizeof(Idx))
-             inline constexpr Idx // node 0 will always be root, return the index of new root
-             tree_array<T, Idx>::take(Idx to, tree_array& tree, Idx from)
-                 requires std::is_move_constructible_v<T>
+template <typename T>
+    requires std::is_default_constructible_v<T>
+inline constexpr std::size_t // node 0 will always be root, return the index of new root
+tree_array<T>::take(std::size_t to, tree_array& tree, std::size_t from)
+    requires std::is_move_constructible_v<T>
 {
-    std::flat_map<Idx, Idx> mapping;
+    std::flat_map<std::size_t, std::size_t> mapping;
 
-    auto func = [&](Idx node, tree_array<T>&) //
+    auto func = [&](std::size_t node, tree_array<T>&) //
     {
         for (auto& child : tree.get_children(node))
         {
-            Idx cp = mapping[tree.get_parent(child)];
-            Idx cn = tree_array<T, Idx>::emplace(std::move(tree.get(child).data_));
+            std::size_t cp = mapping[tree.get_parent(child)];
+            std::size_t cn = tree_array<T>::emplace(std::move(tree.get(child).data_));
             mapping.emplace(child, cn);
             this->add_child(cp, cn);
         }
     };
 
-    Idx new_from = tree_array<T, Idx>::emplace(std::move(tree.get(from).data_));
+    std::size_t new_from = tree_array<T>::emplace(std::move(tree.get(from).data_));
     mapping.emplace(from, new_from);
     tree.traverse(from, func);
     this->add_child(to, mapping[from]);
@@ -245,41 +243,38 @@ template <typename T, typename Idx>
     return new_from;
 }
 
-template <typename T, typename Idx>
-    requires std::is_default_constructible_v<T> && //
-             std::unsigned_integral<Idx> &&
-             (sizeof(T) >= sizeof(Idx))
-             inline constexpr Idx // very expensive!, node 0 will always be root, return the index of new root
-             tree_array<T, Idx>::insert(Idx to, const tree_array& tree, Idx from)
-                 requires std::is_copy_constructible_v<T>
+template <typename T>
+    requires std::is_default_constructible_v<T>
+inline constexpr std::size_t // very expensive!, node 0 will always be root, return the index of new root
+tree_array<T>::insert(std::size_t to, const tree_array& tree, std::size_t from)
+    requires std::is_copy_constructible_v<T>
 {
-    std::flat_map<Idx, Idx> mapping;
+    std::flat_map<std::size_t, std::size_t> mapping;
 
-    auto func = [&](Idx node, const tree_array<T>&) //
+    auto func = [&](std::size_t node, const tree_array<T>&) //
     {
         for (auto& child : tree.get_children(node))
         {
-            Idx cp = mapping[tree.get_parent(child)];
-            Idx cn = tree_array<T, Idx>::emplace(tree.get(child).data_);
+            std::size_t cp = mapping[tree.get_parent(child)];
+            std::size_t cn = tree_array<T>::emplace(tree.get(child).data_);
             mapping.emplace(child, cn);
             this->add_child(cp, cn);
         }
     };
 
-    Idx new_from = tree_array<T, Idx>::emplace(tree.get(from).data_);
+    std::size_t new_from = tree_array<T>::emplace(tree.get(from).data_);
     mapping.emplace(from, new_from);
     tree.traverse(from, func);
     this->add_child(to, mapping[from]);
     return new_from;
 }
 
-template <typename T, typename Idx>
-    requires std::is_default_constructible_v<T> && //
-             std::unsigned_integral<Idx> && (sizeof(T) >= sizeof(Idx))
+template <typename T>
+    requires std::is_default_constructible_v<T>
 inline constexpr void // very expensive!
-    tree_array<T, Idx>::cut(Idx at)
+tree_array<T>::cut(std::size_t at)
 {
-    auto func = [this](Idx node, const tree_array<T>&) //
+    auto func = [this](std::size_t node, const tree_array<T>&) //
     {
         this->reset_children(node);
         this->nodes_.erase(node);
@@ -296,30 +291,28 @@ inline constexpr void // very expensive!
     this->nodes_.erase(at);
 }
 
-template <typename T, typename Idx>
-    requires std::is_default_constructible_v<T> && //
-             std::unsigned_integral<Idx> && (sizeof(T) >= sizeof(Idx))
+template <typename T>
+    requires std::is_default_constructible_v<T>
 inline constexpr void //
-    tree_array<T, Idx>::clear()
+tree_array<T>::clear()
 {
     nodes_.clear();
     children_.clear();
 }
 
-template <typename T, typename Idx>
-    requires std::is_default_constructible_v<T> && std::unsigned_integral<Idx> &&
-             (sizeof(T) >= sizeof(Idx))
-             template <typename S, typename F>
-                 requires std::invocable<F, Idx, tree_array<T, Idx>&>
+template <typename T>
+    requires std::is_default_constructible_v<T>
+template <typename S, typename F>
+    requires std::invocable<F, std::size_t, tree_array<T>&>
 inline constexpr void //
-    tree_array<T, Idx>::traverse(this S&& self, Idx at, F&& callback)
+tree_array<T>::traverse(this S&& self, std::size_t at, F&& callback)
 {
-    std::deque<Idx> queue;
+    std::deque<std::size_t> queue;
     queue.push_back(at);
 
     while (!queue.empty())
     {
-        Idx curr = queue.front();
+        std::size_t curr = queue.front();
 
         if (std::forward<S>(self).has_children(curr))
         {
@@ -332,33 +325,30 @@ inline constexpr void //
     }
 }
 
-template <typename T, typename Idx>
-    requires std::is_default_constructible_v<T> && //
-             std::unsigned_integral<Idx> && (sizeof(T) >= sizeof(Idx))
-inline constexpr std::vector<Idx> //
-    tree_array<T, Idx>::sort [[nodiscard]] (Idx at) const
+template <typename T>
+    requires std::is_default_constructible_v<T>
+inline constexpr std::vector<std::size_t> //
+tree_array<T>::sort [[nodiscard]] (std::size_t at) const
 {
-    std::vector<Idx> idx;
+    std::vector<std::size_t> idx;
     idx.reserve(size());
-    auto func = [&idx](Idx node, const tree_array<T>&) { idx.push_back(node); };
+    auto func = [&idx](std::size_t node, const tree_array<T>&) { idx.push_back(node); };
     traverse(at, func);
     return idx;
 }
 
-template <typename T, typename Idx>
-    requires std::is_default_constructible_v<T> && //
-             std::unsigned_integral<Idx> && (sizeof(T) >= sizeof(Idx))
-inline constexpr Idx //
-    tree_array<T, Idx>::expand_to(Idx to)
+template <typename T>
+    requires std::is_default_constructible_v<T>
+inline constexpr std::size_t //
+tree_array<T>::expand_to(std::size_t to)
 {
     nodes_.expand_to(to);
 }
 
-template <typename T, typename Idx>
-    requires std::is_default_constructible_v<T> && //
-             std::unsigned_integral<Idx> && (sizeof(T) >= sizeof(Idx))
-inline constexpr Idx // linear search, return index in children array
-    tree_array<T, Idx>::find_child(Idx at, Idx child) const
+template <typename T>
+    requires std::is_default_constructible_v<T>
+inline constexpr std::size_t // linear search, return index in children array
+tree_array<T>::find_child(std::size_t at, std::size_t child) const
 {
     auto& children = get_children(at);
     auto result = std::ranges::find(children, child);
@@ -367,14 +357,13 @@ inline constexpr Idx // linear search, return index in children array
     {
         return std::distance(children.begin(), result);
     }
-    return std::numeric_limits<Idx>::max();
+    return std::numeric_limits<std::size_t>::max();
 }
 
-template <typename T, typename Idx>
-    requires std::is_default_constructible_v<T> && //
-             std::unsigned_integral<Idx> && (sizeof(T) >= sizeof(Idx))
+template <typename T>
+    requires std::is_default_constructible_v<T>
 inline constexpr void //
-    tree_array<T, Idx>::reset_parent(Idx node)
+tree_array<T>::reset_parent(std::size_t node)
 {
     if (!has_parent(node))
     {
@@ -390,17 +379,16 @@ inline constexpr void //
     if (children.empty())
     {
         children_.erase(parent.children_);
-        parent.children_ = std::numeric_limits<Idx>::max();
+        parent.children_ = std::numeric_limits<std::size_t>::max();
     }
 
     clear_parent(node);
 }
 
-template <typename T, typename Idx>
-    requires std::is_default_constructible_v<T> && //
-             std::unsigned_integral<Idx> && (sizeof(T) >= sizeof(Idx))
+template <typename T>
+    requires std::is_default_constructible_v<T>
 inline constexpr void //
-    tree_array<T, Idx>::add_child(Idx at, Idx child)
+tree_array<T>::add_child(std::size_t at, std::size_t child)
 {
     if (get_parent(child) == at || at == child)
     {
@@ -419,13 +407,12 @@ inline constexpr void //
     get(child).parent_ = at;
 }
 
-template <typename T, typename Idx>
-    requires std::is_default_constructible_v<T> && //
-             std::unsigned_integral<Idx> && (sizeof(T) >= sizeof(Idx))
-inline constexpr const std::pmr::deque<Idx>& //
-    tree_array<T, Idx>::get_children(Idx node) const
+template <typename T>
+    requires std::is_default_constructible_v<T>
+inline constexpr const std::pmr::deque<std::size_t>& //
+tree_array<T>::get_children(std::size_t node) const
 {
-    static const std::pmr::deque<Idx> empty(0);
+    static const std::pmr::deque<std::size_t> empty(0);
     if (!has_children(node))
     {
         return empty;
@@ -433,41 +420,37 @@ inline constexpr const std::pmr::deque<Idx>& //
     return children_[get(node).children_];
 }
 
-template <typename T, typename Idx>
-    requires std::is_default_constructible_v<T> && //
-             std::unsigned_integral<Idx> && (sizeof(T) >= sizeof(Idx))
+template <typename T>
+    requires std::is_default_constructible_v<T>
 inline constexpr bool //
-    tree_array<T, Idx>::has_children(Idx node) const
+tree_array<T>::has_children(std::size_t node) const
 {
-    return get(node).children_ != std::numeric_limits<Idx>::max();
+    return get(node).children_ != std::numeric_limits<std::size_t>::max();
 }
 
-template <typename T, typename Idx>
-    requires std::is_default_constructible_v<T> && //
-             std::unsigned_integral<Idx> && (sizeof(T) >= sizeof(Idx))
-inline constexpr Idx //
-    tree_array<T, Idx>::get_parent(Idx node) const
+template <typename T>
+    requires std::is_default_constructible_v<T>
+inline constexpr std::size_t //
+tree_array<T>::get_parent(std::size_t node) const
 {
     return get(node).parent_;
 }
 
-template <typename T, typename Idx>
-    requires std::is_default_constructible_v<T> && //
-             std::unsigned_integral<Idx> && (sizeof(T) >= sizeof(Idx))
-inline constexpr Idx //
-    tree_array<T, Idx>::has_parent(Idx node) const
+template <typename T>
+    requires std::is_default_constructible_v<T>
+inline constexpr std::size_t //
+tree_array<T>::has_parent(std::size_t node) const
 {
-    return get(node).parent_ != std::numeric_limits<Idx>::max();
+    return get(node).parent_ != std::numeric_limits<std::size_t>::max();
 }
 
-template <typename T, typename Idx>
-    requires std::is_default_constructible_v<T> && //
-             std::unsigned_integral<Idx> && (sizeof(T) >= sizeof(Idx))
+template <typename T>
+    requires std::is_default_constructible_v<T>
 inline constexpr void //
-    tree_array<T, Idx>::erase(Idx node)
+tree_array<T>::erase(std::size_t node)
 {
     auto& target = get(node);
-    Idx parent = get_parent(node);
+    std::size_t parent = get_parent(node);
 
     if (!get_children(node).empty())
     {
@@ -499,59 +482,53 @@ inline constexpr void //
     nodes_.erase(node);
 }
 
-template <typename T, typename Idx>
-    requires std::is_default_constructible_v<T> && //
-             std::unsigned_integral<Idx> && (sizeof(T) >= sizeof(Idx))
+template <typename T>
+    requires std::is_default_constructible_v<T>
 template <typename S>
 inline constexpr auto& // mostly used internally
-    tree_array<T, Idx>::get(this S&& self, Idx node)
+tree_array<T>::get(this S&& self, std::size_t node)
 {
     return std::forward<S>(self).nodes_[node];
 }
 
-template <typename T, typename Idx>
-    requires std::is_default_constructible_v<T> && //
-             std::unsigned_integral<Idx> && (sizeof(T) >= sizeof(Idx))
-inline constexpr Idx //
-    tree_array<T, Idx>::size() const
+template <typename T>
+    requires std::is_default_constructible_v<T>
+inline constexpr std::size_t //
+tree_array<T>::size() const
 {
     return nodes_.size();
 }
 
-template <typename T, typename Idx>
-    requires std::is_default_constructible_v<T> && //
-             std::unsigned_integral<Idx> && (sizeof(T) >= sizeof(Idx))
-inline constexpr bool // very expensive when node is not std::numeric_limits<Idx>::max()!
-    tree_array<T, Idx>::containes(Idx node) const
+template <typename T>
+    requires std::is_default_constructible_v<T>
+inline constexpr bool // very expensive when node is not std::numeric_limits<std::size_t>::max()!
+tree_array<T>::containes(std::size_t node) const
 {
     return nodes_.contains(node);
 }
 
-template <typename T, typename Idx>
-    requires std::is_default_constructible_v<T> && //
-             std::unsigned_integral<Idx> && (sizeof(T) >= sizeof(Idx))
+template <typename T>
+    requires std::is_default_constructible_v<T>
 template <typename... Args>
-inline constexpr Idx // return node index
-    tree_array<T, Idx>::emplace [[nodiscard]] (Args&&... args)
+inline constexpr std::size_t // return node index
+tree_array<T>::emplace [[nodiscard]] (Args&&... args)
 {
     return nodes_.emplace(std::forward<Args>(args)...);
 }
 
-template <typename T, typename Idx>
-    requires std::is_default_constructible_v<T> && //
-                 std::unsigned_integral<Idx> && (sizeof(T) >= sizeof(Idx))
+template <typename T>
+    requires std::is_default_constructible_v<T>
 inline constexpr //
-    tree_array<T, Idx>::tree_array(std::pmr::memory_resource* mem_res)
+    tree_array<T>::tree_array(std::pmr::memory_resource* mem_res)
     : nodes_(4, mem_res),
       mem_res_(mem_res)
 {
 }
 
-template <typename T, typename Idx>
-    requires std::is_default_constructible_v<T> && //
-             std::unsigned_integral<Idx> && (sizeof(T) >= sizeof(Idx))
+template <typename T>
+    requires std::is_default_constructible_v<T>
 inline constexpr void //
-    tree_array<T, Idx>::reset_children(Idx node)
+tree_array<T>::reset_children(std::size_t node)
 {
     if (has_children(node))
     {
@@ -563,11 +540,10 @@ inline constexpr void //
     }
 }
 
-template <typename T, typename Idx>
-    requires std::is_default_constructible_v<T> && //
-             std::unsigned_integral<Idx> && (sizeof(T) >= sizeof(Idx))
+template <typename T>
+    requires std::is_default_constructible_v<T>
 inline constexpr void //
-    tree_array<T, Idx>::clear_parent(Idx node)
+tree_array<T>::clear_parent(std::size_t node)
 {
-    get(node).parent_ = std::numeric_limits<Idx>::max();
+    get(node).parent_ = std::numeric_limits<std::size_t>::max();
 }
