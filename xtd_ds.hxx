@@ -13,9 +13,12 @@
 #define XTD_DS_HXX
 
 #include <vector>
+#include <deque>
 #include <concepts>
 #include <numbers>
 #include <span>
+#include <ranges>
+#include <flat_map>
 #include <type_traits>
 #include <unordered_set>
 
@@ -55,192 +58,155 @@ namespace XTD_EXT_HPP_NAMESPACE
         C c_ = {};
 
       public:
-        inline constexpr bool //
-        contains [[nodiscard]] (Idx idx) const
-        {
-            if (idx >= c_.size())
-            {
-                return false;
-            }
-
-            Idx next = next_;
-            while (next != std::numeric_limits<Idx>::max())
-            {
-                if (next == idx)
-                {
-                    return false;
-                }
-                next = c_[next].next_;
-            }
-            return true;
-        }
+        constexpr bool //
+        contains [[nodiscard]] (Idx idx) const;
 
         template <typename S>
-        inline constexpr auto& // enable check will have high overhead
-        at(this S&& self, Idx idx)
-        {
-            if constexpr (checking)
-            {
-                if (!self.occupied(idx))
-                {
-                    throw std::invalid_argument("This index is refereing to an unoccupied position");
-                }
-            }
-            return *(T*)(std::forward<S>(self).c_[idx].elm_);
-        }
+        constexpr auto& // enable check will have high overhead
+        at(this S&& self, Idx idx);
 
         template <typename S>
-        inline constexpr auto& //
-        operator[](this S&& self, Idx idx) noexcept
-        {
-            return *(T*)(std::forward<S>(self).c_[idx].elm_);
-        }
+        constexpr auto& //
+        operator[](this S&& self, Idx idx) noexcept;
 
         template <typename S>
-        inline constexpr auto //
-        data(this S&& self) noexcept
-        {
-            return *(T*)(std::forward<S>(self).c_.data());
-        }
+        constexpr auto //
+        data(this S&& self) noexcept;
 
-        inline constexpr size_type //
-        size() const noexcept
-        {
-            return size_;
-        }
+        constexpr size_type //
+        size() const noexcept;
 
-        inline constexpr size_type //
-        capacity() const noexcept
-        {
-            return c_.size();
-        }
+        constexpr size_type //
+        capacity() const noexcept;
 
-        inline constexpr void //
-        clear()
-        {
-            if constexpr (!std::is_trivially_destructible_v<T>)
-            {
-                std::unordered_set<Idx> empty_set = {};
-                Idx next = next_;
-                while (next != std::numeric_limits<Idx>::max())
-                {
-                    empty_set.insert(next);
-                    next = c_[next].next_;
-                }
+        constexpr void //
+        clear();
 
-                for (Idx i = 0; i < c_.size(); i++)
-                {
-                    if (!empty_set.contains(i))
-                    {
-                        std::destroy_at(reinterpret_cast<T*>(c_[i].elm_));
-                    }
-                }
-            }
+        constexpr bool //
+        erase(Idx idx);
 
-            size_ = 0;
-            next_ = std::numeric_limits<Idx>::max();
-            c_.clear();
-        }
+        constexpr void //
+        expand();
 
-        inline constexpr bool //
-        erase(Idx idx)
-        {
-            if constexpr (checking)
-            {
-                if (!occupied(idx))
-                {
-                    return false;
-                }
-            }
-
-            if constexpr (!std::is_trivially_destructible_v<T>)
-            {
-                std::destroy_at(reinterpret_cast<T*>(c_[idx].elm_));
-            }
-
-            c_[idx].next_ = next_;
-            next_ = idx;
-            size_--;
-            return true;
-        }
-
-        inline constexpr void //
-        expand()
-        {
-            expand_to(c_.size() == 0 ? 1 : c_.size() * 2);
-        }
-
-        inline constexpr void //
-        expand_to(Idx size)
-        {
-            if (size <= c_.size())
-            {
-                return;
-            }
-
-            Idx old_size = c_.size();
-            c_.resize(size);
-
-            for (Idx i = old_size; i < c_.size(); i++)
-            {
-                c_[i].next_ = i + 1;
-            }
-            c_[c_.size() - 1].next_ = std::numeric_limits<Idx>::max();
-
-            Idx next = next_;
-            while (next != std::numeric_limits<Idx>::max() && c_[next].next_ != std::numeric_limits<Idx>::max())
-            {
-                next = c_[next].next_;
-            }
-
-            if (next == std::numeric_limits<Idx>::max())
-            {
-                next_ = old_size;
-                return;
-            }
-            c_[next].next_ = old_size;
-        }
+        constexpr void //
+        expand_to(Idx size);
 
         template <class... Args>
-        inline constexpr Idx //
-        emplace [[nodiscard]] (Args&&... args)
-        {
-            if (next_ == std::numeric_limits<Idx>::max())
-            {
-                expand();
-            }
-
-            Idx curr = next_;
-            next_ = c_[curr].next_;
-            std::construct_at(reinterpret_cast<T*>(c_[curr].elm_), std::forward<Args>(args)...);
-
-            size_++;
-            return curr;
-        }
+        constexpr Idx //
+        emplace [[nodiscard]] (Args&&... args);
 
         template <typename... CArgs>
-        inline constexpr jump_array(CArgs... container_args)
-            : next_(0),
-              c_(std::forward<CArgs>(container_args)...)
-        {
-            c_.resize(1);
-            c_[0].next_ = std::numeric_limits<Idx>::max();
-            next_ = 0;
-        }
+        constexpr jump_array(CArgs... container_args);
 
-        inline constexpr ~jump_array() { clear(); }
+        constexpr ~jump_array();
     };
 
-    inline constexpr void //
-    replacing_erase(auto& container, size_t idx)
-    {
-        std::byte tmp[sizeof(container[0])];
-        memcpy(tmp, &container[idx], sizeof(tmp));
-        memcpy(&container[idx], &container.back(), sizeof(tmp));
-        memcpy(&container.back(), tmp, sizeof(tmp));
+    constexpr void //
+    replacing_erase(auto& container, size_t idx);
 
-        container.pop_back();
-    }
+    template <typename T>
+        requires std::is_default_constructible_v<T>
+    struct tree_array
+    {
+      public:
+        struct node
+        {
+            friend tree_array;
+
+          private:
+            std::size_t parent_ = std::numeric_limits<std::size_t>::max();
+            std::size_t children_ = std::numeric_limits<std::size_t>::max();
+
+          public:
+            T data_ = {};
+
+            template <typename... Args>
+            node(Args&&... args)
+                : data_(std::forward<Args>(args)...)
+            {
+            }
+        };
+
+      protected:
+        jump_array<node, std::size_t> nodes_ = {};
+        jump_array<std::pmr::deque<std::size_t>, std::size_t> children_ = {};
+        mutable std::pmr::memory_resource* mem_res_ = nullptr;
+
+        constexpr void //
+        clear_parent(std::size_t node);
+
+        constexpr void //
+        reset_children(std::size_t node);
+
+      public:
+        constexpr //
+            tree_array(std::pmr::memory_resource* mem_res = std::pmr::new_delete_resource());
+
+        template <typename... Args>
+        constexpr std::size_t // return node index
+        emplace [[nodiscard]] (Args&&... args);
+
+        constexpr bool // very expensive when node is not std::numeric_limits<std::size_t>::max()!
+        containes(std::size_t node) const;
+
+        constexpr std::size_t //
+        size() const;
+
+        template <typename S>
+        constexpr auto& // mostly used internally
+        get(this S&& self, std::size_t node);
+
+        constexpr void //
+        erase(std::size_t node);
+
+        constexpr std::size_t //
+        has_parent(std::size_t node) const;
+
+        constexpr std::size_t //
+        get_parent(std::size_t node) const;
+
+        constexpr bool //
+        has_children(std::size_t node) const;
+
+        constexpr const std::pmr::deque<std::size_t>& //
+        get_children(std::size_t node) const;
+
+        constexpr void //
+        add_child(std::size_t at, std::size_t child);
+
+        constexpr void //
+        reset_parent(std::size_t node);
+
+        constexpr std::size_t // linear search, return index in children array
+        find_child(std::size_t at, std::size_t child) const;
+
+        constexpr std::size_t //
+        expand_to(std::size_t to);
+
+        constexpr std::vector<std::size_t> //
+        sort [[nodiscard]] (std::size_t at) const;
+
+        template <typename S, typename F>
+            requires std::invocable<F, std::size_t, tree_array&>
+        constexpr void //
+        traverse(this S&& self, std::size_t at, F&& callback);
+
+        constexpr void //
+        clear();
+
+        constexpr void // very expensive!
+        cut(std::size_t at);
+
+        constexpr std::size_t // very expensive!, node 0 will always be root, return the index of new root
+        insert(std::size_t to, const tree_array& tree, std::size_t from)
+            requires std::is_copy_constructible_v<T>;
+
+        constexpr std::size_t // node 0 will always be root, return the index of new root
+        take(std::size_t to, tree_array& tree, std::size_t from)
+            requires std::is_move_constructible_v<T>;
+    };
+
+#include "xtd_ds.ixx"
 }; // namespace XTD_EXT_HPP_NAMESPACE
 
 #endif // XTD_DS_HXX
