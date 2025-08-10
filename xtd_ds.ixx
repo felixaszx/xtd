@@ -142,6 +142,14 @@ inline constexpr typename jump_array<T, Idx, C, checking>::size_type //
 template <typename T, typename Idx, typename C, bool checking>
     requires std::unsigned_integral<Idx> && (sizeof(T) >= sizeof(Idx))
 inline constexpr typename jump_array<T, Idx, C, checking>::size_type //
+    jump_array<T, Idx, C, checking>::effective_size() const noexcept
+{
+    return last_ + 1;
+}
+
+template <typename T, typename Idx, typename C, bool checking>
+    requires std::unsigned_integral<Idx> && (sizeof(T) >= sizeof(Idx))
+inline constexpr typename jump_array<T, Idx, C, checking>::size_type //
     jump_array<T, Idx, C, checking>::size() const noexcept
 {
     return size_;

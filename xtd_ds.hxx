@@ -53,8 +53,9 @@ namespace XTD_EXT_HPP_NAMESPACE
         using const_reference = const T&;
 
       private:
-        Idx next_ = 0;
+        Idx next_ = 0; // empty
         Idx size_ = 0;
+        Idx last_ = 0; // available
         C c_ = {};
 
       public:
@@ -75,6 +76,9 @@ namespace XTD_EXT_HPP_NAMESPACE
 
         constexpr size_type //
         size() const noexcept;
+
+        constexpr size_type //
+        effective_size() const noexcept;
 
         constexpr size_type //
         capacity() const noexcept;
