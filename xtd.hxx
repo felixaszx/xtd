@@ -61,7 +61,7 @@ namespace XTD_EXT_HPP_NAMESPACE_CAPITAL
     using ssz = ssize_t;
     using ptr_diff = ptrdiff_t;
 
-    using char8 = char8_t;
+    using char8 = char;
     using uchar8 = unsigned char;
     using char16 = char16_t;
     using char32 = char32_t;
