@@ -57,7 +57,7 @@ namespace XTD_EXT_HPP_NAMESPACE_CAPITAL
     using u64 = std::uint64_t;
     using imax = std::intmax_t;
     using umax = std::uintmax_t;
-    using sz = std::size_t;
+    using usz = std::size_t;
     using ssz = ssize_t;
     using ptr_diff = ptrdiff_t;
 
@@ -82,7 +82,7 @@ namespace XTD_EXT_HPP_NAMESPACE_CAPITAL
     using atomic_u64 = std::atomic_uint64_t;
     using atomic_imax = std::atomic_intmax_t;
     using atomic_umax = std::atomic_uintmax_t;
-    using atomic_sz = std::atomic_size_t;
+    using atomic_usz = std::atomic_size_t;
     using atomic_ssz = std::atomic<ssize_t>;
     using atomic_ptr_diff = std::atomic_ptrdiff_t;
 
