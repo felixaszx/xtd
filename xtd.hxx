@@ -51,7 +51,7 @@ namespace XTD_EXT_HPP_NAMESPACE_CAPITAL
     using imax = std::intmax_t;
     using umax = std::uintmax_t;
     using usz = std::size_t;
-    using ssz = ssize_t;
+    using ssz = std::ptrdiff_t;
     using ptrdiff = std::ptrdiff_t;
 
     using uchar = unsigned char;
