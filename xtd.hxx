@@ -12,21 +12,11 @@
 #ifndef XTD_HXX
 #define XTD_HXX
 
+#include <print>
 #include <atomic>
 #include <chrono>
-#include <concepts>
-#include <filesystem>
-#include <print>
-#include <functional>
-#include <iostream>
-#include <memory_resource>
-#include <ranges>
+#include <type_traits>
 #include <source_location>
-#include <stdexcept>
-#include <string>
-#include <string_view>
-#include <thread>
-#include <algorithm>
 
 #ifndef XTD_EXT_HPP_NAMESPACE
     #define XTD_EXT_HPP_NAMESPACE xtd
@@ -43,10 +33,13 @@ namespace XTD_EXT_HPP_NAMESPACE::i_ // internal namespace
     {
         using F::operator()...;
     };
+
 }; // namespace XTD_EXT_HPP_NAMESPACE::i_
 
 namespace XTD_EXT_HPP_NAMESPACE_CAPITAL
 {
+    inline const std::size_t DEFAULT_ALITNMENT = 16;
+
     using i8 = std::int8_t;
     using u8 = std::uint8_t;
     using i16 = std::int16_t;
@@ -59,10 +52,10 @@ namespace XTD_EXT_HPP_NAMESPACE_CAPITAL
     using umax = std::uintmax_t;
     using usz = std::size_t;
     using ssz = ssize_t;
-    using ptr_diff = ptrdiff_t;
+    using ptrdiff = std::ptrdiff_t;
 
-    using char8 = char;
-    using uchar8 = unsigned char;
+    using uchar = unsigned char;
+    using char8 = char8_t;
     using char16 = char16_t;
     using char32 = char32_t;
     using wchar = wchar_t;
@@ -71,29 +64,57 @@ namespace XTD_EXT_HPP_NAMESPACE_CAPITAL
     using f64 = double;
 
     // atomic variants
-    using atomic_bool = std::atomic_bool;
-    using atomic_i8 = std::atomic_int8_t;
-    using atomic_u8 = std::atomic_uint8_t;
-    using atomic_i16 = std::atomic_int16_t;
-    using atomic_u16 = std::atomic_uint16_t;
-    using atomic_i32 = std::atomic_int32_t;
-    using atomic_u32 = std::atomic_uint32_t;
-    using atomic_i64 = std::atomic_int64_t;
-    using atomic_u64 = std::atomic_uint64_t;
-    using atomic_imax = std::atomic_intmax_t;
-    using atomic_umax = std::atomic_uintmax_t;
-    using atomic_usz = std::atomic_size_t;
-    using atomic_ssz = std::atomic<ssize_t>;
-    using atomic_ptr_diff = std::atomic_ptrdiff_t;
+    using atomic_bool = std::atomic<bool>;
+    using atomic_i8 = std::atomic<i8>;
+    using atomic_u8 = std::atomic<u8>;
+    using atomic_i16 = std::atomic<i16>;
+    using atomic_u16 = std::atomic<u16>;
+    using atomic_i32 = std::atomic<i32>;
+    using atomic_u32 = std::atomic<u32>;
+    using atomic_i64 = std::atomic<i64>;
+    using atomic_u64 = std::atomic<u64>;
+    using atomic_imax = std::atomic<imax>;
+    using atomic_umax = std::atomic<umax>;
+    using atomic_usz = std::atomic<usz>;
+    using atomic_ssz = std::atomic<ssz>;
+    using atomic_ptrdiff = std::atomic<ptrdiff>;
 
-    using atomic_char8 = std::atomic_char;
-    using atomic_uchar8 = std::atomic_uchar;
-    using atomic_char16 = std::atomic_char16_t;
-    using atomic_char32 = std::atomic_char32_t;
-    using atomic_wchar = std::atomic_wchar_t;
+    using atomic_char = std::atomic<char>;
+    using atomic_uchar = std::atomic<uchar>;
+    using atomic_char8 = std::atomic<char8>;
+    using atomic_char16 = std::atomic<char16>;
+    using atomic_char32 = std::atomic<char32>;
+    using atomic_wchar = std::atomic<wchar>;
 
-    template <typename T>
-    using ref_of = std::reference_wrapper<T>;
+    using atomic_f32 = std::atomic<f32>;
+    using atomic_f64 = std::atomic<f64>;
+
+    template <auto C = std::numeric_limits<std::size_t>::max(),
+              typename Idx = std::size_t,
+              typename Accessor = void,
+              typename T = void>
+        requires std::unsigned_integral<Idx>
+    class ts_idx
+    {
+        friend Accessor;
+
+      public:
+        inline static const ts_idx null_idx = static_cast<Idx>(-1);
+        inline static const ts_idx zero_idx = static_cast<Idx>(0);
+
+      private:
+        Idx idx_ = null_idx;
+        inline constexpr ts_idx(Idx i) { idx_ = i; }
+
+      public:
+        inline constexpr operator bool() const noexcept { return null_idx.idx_ != idx_; }
+        inline constexpr operator Idx() const noexcept { return idx_; }
+        inline constexpr bool operator==(const ts_idx& x) const noexcept { return idx_ == x.idx_; }
+        inline static consteval decltype(C) idx_class() noexcept { return C; };
+        inline const ts_idx off_by(Idx off) const noexcept { return *this ? ts_idx(idx_ + off) : null_idx; };
+
+        ts_idx() = default;
+    };
 
 }; // namespace XTD_EXT_HPP_NAMESPACE_CAPITAL
 
@@ -101,13 +122,12 @@ namespace XTD_EXT_HPP_NAMESPACE
 {
     using namespace XTD_EXT_HPP_NAMESPACE_CAPITAL;
 
-    inline const size_t DEFAULT_ALITNMENT = 16;
-
     template <typename T>
     inline constexpr auto //
     aligned [[nodiscard]] (const T& size, std::size_t alignment = DEFAULT_ALITNMENT) noexcept
         requires std::is_arithmetic_v<T>
     {
+        std::u32string a;
         return alignment * ((size - 1) / alignment) + alignment;
     }
 
@@ -380,19 +400,10 @@ namespace XTD_EXT_HPP_NAMESPACE::literals
     }
 }; // namespace XTD_EXT_HPP_NAMESPACE::literals
 
-#ifndef XTD_NO_DATA_STRUCTURES
-    #include "xtd_ds.hxx"
-#endif
-
-#ifndef XTD_NO_NAMESPACE
+#if !defined(XTD_NO_NAMESPACE)
 using namespace XTD_EXT_HPP_NAMESPACE_CAPITAL;
+using namespace XTD_EXT_HPP_NAMESPACE;
 using namespace XTD_EXT_HPP_NAMESPACE::literals;
-
-// deault all ranges algorithm
-namespace xtd
-{
-    using namespace std::ranges;
-};
 #endif
 
 #endif // XTD_HXX

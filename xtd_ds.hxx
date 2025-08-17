@@ -36,7 +36,7 @@ namespace XTD_EXT_HPP_NAMESPACE
 
     template <typename T,
               typename Idx = std::size_t,
-              typename C = std::pmr::vector<jump_array_elm<T, Idx>>,
+              typename C = std::vector<jump_array_elm<T, Idx>>,
               bool checking = false>
         requires std::unsigned_integral<Idx> && //
                  (sizeof(T) >= sizeof(Idx))
@@ -55,7 +55,7 @@ namespace XTD_EXT_HPP_NAMESPACE
       private:
         Idx next_ = 0; // empty
         Idx size_ = 0;
-        Idx last_ = 0; // available
+        Idx last_ = std::numeric_limits<Idx>::max(); // empty
         C c_ = {};
 
       public:
@@ -108,107 +108,6 @@ namespace XTD_EXT_HPP_NAMESPACE
     constexpr void //
     replacing_erase(auto& container, size_t idx);
 
-    template <typename T>
-        requires std::is_default_constructible_v<T>
-    struct tree_array
-    {
-      public:
-        struct node
-        {
-            friend tree_array;
-
-          private:
-            std::size_t parent_ = std::numeric_limits<std::size_t>::max();
-            std::size_t children_ = std::numeric_limits<std::size_t>::max();
-
-          public:
-            T data_ = {};
-
-            template <typename... Args>
-            node(Args&&... args)
-                : data_(std::forward<Args>(args)...)
-            {
-            }
-        };
-
-      protected:
-        jump_array<node, std::size_t> nodes_ = {};
-        jump_array<std::pmr::deque<std::size_t>, std::size_t> children_ = {};
-        mutable std::pmr::memory_resource* mem_res_ = nullptr;
-
-        constexpr void //
-        clear_parent(std::size_t node);
-
-        constexpr void //
-        reset_children(std::size_t node);
-
-      public:
-        constexpr //
-            tree_array(std::pmr::memory_resource* mem_res = std::pmr::new_delete_resource());
-
-        template <typename... Args>
-        constexpr std::size_t // return node index
-        emplace [[nodiscard]] (Args&&... args);
-
-        constexpr bool // very expensive when node is not std::numeric_limits<std::size_t>::max()!
-        containes(std::size_t node) const;
-
-        constexpr std::size_t //
-        size() const;
-
-        template <typename S>
-        constexpr auto& // mostly used internally
-        get(this S&& self, std::size_t node);
-
-        constexpr void //
-        erase(std::size_t node);
-
-        constexpr std::size_t //
-        has_parent(std::size_t node) const;
-
-        constexpr std::size_t //
-        get_parent(std::size_t node) const;
-
-        constexpr bool //
-        has_children(std::size_t node) const;
-
-        constexpr const std::pmr::deque<std::size_t>& //
-        get_children(std::size_t node) const;
-
-        constexpr void //
-        add_child(std::size_t at, std::size_t child);
-
-        constexpr void //
-        reset_parent(std::size_t node);
-
-        constexpr std::size_t // linear search, return index in children array
-        find_child(std::size_t at, std::size_t child) const;
-
-        constexpr std::size_t //
-        expand_to(std::size_t to);
-
-        constexpr std::vector<std::size_t> //
-        sort [[nodiscard]] (std::size_t at) const;
-
-        template <typename S, typename F>
-            requires std::invocable<F, std::size_t, tree_array&>
-        constexpr void //
-        traverse(this S&& self, std::size_t at, F&& callback);
-
-        constexpr void //
-        clear();
-
-        constexpr void // very expensive!
-        cut(std::size_t at);
-
-        constexpr std::size_t // very expensive!, node 0 will always be root, return the index of new root
-        insert(std::size_t to, const tree_array& tree, std::size_t from)
-            requires std::is_copy_constructible_v<T>;
-
-        constexpr std::size_t // node 0 will always be root, return the index of new root
-        take(std::size_t to, tree_array& tree, std::size_t from)
-            requires std::is_move_constructible_v<T>;
-    };
 
 #include "xtd_ds.ixx"
 }; // namespace XTD_EXT_HPP_NAMESPACE
