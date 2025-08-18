@@ -60,8 +60,9 @@ namespace XTD_EXT_HPP_NAMESPACE_CAPITAL
     using char32 = char32_t;
     using wchar = wchar_t;
 
-    using f32 = float;
-    using f64 = double;
+    using f32 = std::float_t;
+    using f64 = std::double_t;
+    using flong = long double;
 
     // atomic variants
     using atomic_bool = std::atomic<bool>;
@@ -127,7 +128,6 @@ namespace XTD_EXT_HPP_NAMESPACE
     aligned [[nodiscard]] (const T& size, std::size_t alignment = DEFAULT_ALITNMENT) noexcept
         requires std::is_arithmetic_v<T>
     {
-        std::u32string a;
         return alignment * ((size - 1) / alignment) + alignment;
     }
 
@@ -352,16 +352,40 @@ namespace XTD_EXT_HPP_NAMESPACE::literals
         return static_cast<std::uintmax_t>(i);
     }
 
-    inline consteval float //
-    operator""_f32(long double i)
+    inline consteval std::intmax_t //
+    operator""_usz(unsigned long long i)
     {
-        return static_cast<f32>(i);
+        return static_cast<std::size_t>(i);
+    }
+
+    inline consteval std::uintmax_t //
+    operator""_ssz(unsigned long long i)
+    {
+        return static_cast<std::ptrdiff_t>(i);
+    }
+
+    inline consteval std::uintmax_t //
+    operator""_ptrdiff(unsigned long long i)
+    {
+        return static_cast<std::ptrdiff_t>(i);
     }
 
     inline consteval float //
-    operator""_f64(long double i)
+    operator""_f32(long double f)
     {
-        return static_cast<f64>(i);
+        return static_cast<f32>(f);
+    }
+
+    inline consteval float //
+    operator""_f64(long double f)
+    {
+        return static_cast<f64>(f);
+    }
+
+    inline consteval float //
+    operator""_flong(long double f)
+    {
+        return static_cast<long double>(f);
     }
 
     template <typename To, typename From>
