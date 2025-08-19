@@ -411,6 +411,24 @@ namespace XTD_EXT_HPP_NAMESPACE::literals
         return static_cast<long double>(f);
     }
 
+    inline consteval float //
+    operator""_f32(unsigned long long f)
+    {
+        return static_cast<f32>(f);
+    }
+
+    inline consteval float //
+    operator""_f64(unsigned long long f)
+    {
+        return static_cast<f64>(f);
+    }
+
+    inline consteval float //
+    operator""_flong(unsigned long long f)
+    {
+        return static_cast<long double>(f);
+    }
+
     template <typename To, typename From>
     inline constexpr To //
     castc(From&& from)
