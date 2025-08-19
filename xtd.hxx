@@ -34,6 +34,35 @@ namespace XTD_EXT_HPP_NAMESPACE::i_ // internal namespace
         using F::operator()...;
     };
 
+    struct max_v_t
+    {
+        template <typename M>
+        inline consteval //
+        operator M() const
+        {
+            return std::numeric_limits<M>::max();
+        }
+    };
+
+    struct min_v_t
+    {
+        template <typename M>
+        inline consteval //
+        operator M() const
+        {
+            return std::numeric_limits<M>::max();
+        }
+    };
+
+    struct inf_v_t
+    {
+        template <typename M>
+        inline consteval //
+        operator M() const
+        {
+            return std::numeric_limits<M>::infinity();
+        }
+    };
 }; // namespace XTD_EXT_HPP_NAMESPACE::i_
 
 namespace XTD_EXT_HPP_NAMESPACE_CAPITAL
@@ -64,6 +93,10 @@ namespace XTD_EXT_HPP_NAMESPACE_CAPITAL
     using f64 = std::double_t;
     using flong = long double;
 
+    inline static const xtd::i_::max_v_t max_v = {};
+    inline static const xtd::i_::max_v_t min_v = {};
+    inline static const xtd::i_::inf_v_t inf_v = {};
+
     // atomic variants
     using atomic_bool = std::atomic<bool>;
     using atomic_i8 = std::atomic<i8>;
@@ -93,7 +126,7 @@ namespace XTD_EXT_HPP_NAMESPACE_CAPITAL
     template <auto C = std::numeric_limits<std::size_t>::max(),
               typename Idx = std::size_t,
               typename Accessor = void,
-              typename T = void>
+              typename T = Idx>
         requires std::unsigned_integral<Idx>
     class ts_idx
     {
@@ -106,10 +139,12 @@ namespace XTD_EXT_HPP_NAMESPACE_CAPITAL
       private:
         Idx idx_ = null_idx;
         inline constexpr ts_idx(Idx i) { idx_ = i; }
+        inline constexpr void set(T i) { idx_ = static_cast<Idx>(i); }
 
       public:
         inline constexpr operator bool() const noexcept { return null_idx.idx_ != idx_; }
         inline constexpr operator Idx() const noexcept { return idx_; }
+        inline constexpr operator T() const noexcept { return static_cast<T>(idx_); }
         inline constexpr bool operator==(const ts_idx& x) const noexcept { return idx_ == x.idx_; }
         inline static consteval decltype(C) idx_class() noexcept { return C; };
         inline const ts_idx off_by(Idx off) const noexcept { return *this ? ts_idx(idx_ + off) : null_idx; };
@@ -178,18 +213,6 @@ namespace XTD_EXT_HPP_NAMESPACE
     {
         return sizeof(std::forward<T>(container));
     }
-
-    template <typename T>
-        requires std::is_arithmetic_v<T>
-    inline constexpr T max_v = std::numeric_limits<T>::max();
-
-    template <typename T>
-        requires std::is_arithmetic_v<T>
-    inline constexpr T min_v = std::numeric_limits<T>::min();
-
-    template <typename T>
-        requires std::is_floating_point_v<T>
-    inline constexpr T inf_v = std::numeric_limits<T>::infinity();
 
     template <typename... Args>
     struct logln
