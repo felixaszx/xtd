@@ -9,8 +9,8 @@
  *
  */
 
-#ifndef XTD_HXX
-#define XTD_HXX
+#ifndef STD_EXTENTION_HXX
+#define STD_EXTENTION_HXX
 
 #include <print>
 #include <atomic>
@@ -18,15 +18,10 @@
 #include <type_traits>
 #include <source_location>
 
-#ifndef XTD_EXT_HPP_NAMESPACE
-    #define XTD_EXT_HPP_NAMESPACE xtd
-#endif
+#define STD_EXT_HPP_NAMESPACE         std_ext
+#define STD_EXT_HPP_NAMESPACE_CAPITAL STD_EXT
 
-#ifndef XTD_EXT_HPP_NAMESPACE_CAPITAL
-    #define XTD_EXT_HPP_NAMESPACE_CAPITAL XTD
-#endif
-
-namespace XTD_EXT_HPP_NAMESPACE::i_ // internal namespace
+namespace STD_EXT_HPP_NAMESPACE::i_ // internal namespace
 {
     template <class... F>
     struct overload_call_t : F...
@@ -72,9 +67,9 @@ namespace XTD_EXT_HPP_NAMESPACE::i_ // internal namespace
         template <typename M>
         inline static const M as = std::numeric_limits<M>::infinity();
     };
-}; // namespace XTD_EXT_HPP_NAMESPACE::i_
+}; // namespace STD_EXT_HPP_NAMESPACE::i_
 
-namespace XTD_EXT_HPP_NAMESPACE_CAPITAL
+namespace STD_EXT_HPP_NAMESPACE_CAPITAL
 {
     inline const std::size_t DEFAULT_ALITNMENT = 16;
 
@@ -102,9 +97,9 @@ namespace XTD_EXT_HPP_NAMESPACE_CAPITAL
     using f64 = std::double_t;
     using flong = long double;
 
-    inline static const xtd::i_::max_v_t max_v = {};
-    inline static const xtd::i_::max_v_t min_v = {};
-    inline static const xtd::i_::inf_v_t inf_v = {};
+    inline static const std_ext::i_::max_v_t max_v = {};
+    inline static const std_ext::i_::max_v_t min_v = {};
+    inline static const std_ext::i_::inf_v_t inf_v = {};
 
     // atomic variants
     using atomic_bool = std::atomic<bool>;
@@ -163,11 +158,11 @@ namespace XTD_EXT_HPP_NAMESPACE_CAPITAL
         ts_idx() = default;
     };
 
-}; // namespace XTD_EXT_HPP_NAMESPACE_CAPITAL
+}; // namespace STD_EXT_HPP_NAMESPACE_CAPITAL
 
-namespace XTD_EXT_HPP_NAMESPACE
+namespace STD_EXT_HPP_NAMESPACE
 {
-    using namespace XTD_EXT_HPP_NAMESPACE_CAPITAL;
+    using namespace STD_EXT_HPP_NAMESPACE_CAPITAL;
 
     template <typename T>
     inline constexpr auto //
@@ -276,9 +271,9 @@ namespace XTD_EXT_HPP_NAMESPACE
     {
         return i_::overload_call_t{std::forward<F>(funcs)...};
     }
-}; // namespace XTD_EXT_HPP_NAMESPACE
+}; // namespace STD_EXT_HPP_NAMESPACE
 
-namespace XTD_EXT_HPP_NAMESPACE::literals
+namespace STD_EXT_HPP_NAMESPACE::literals
 {
     using namespace std::chrono_literals;
     using namespace std::string_literals;
@@ -474,12 +469,12 @@ namespace XTD_EXT_HPP_NAMESPACE::literals
     {
         return ((To)(std::forward<From>(from)));
     }
-}; // namespace XTD_EXT_HPP_NAMESPACE::literals
+}; // namespace STD_EXT_HPP_NAMESPACE::literals
 
-#if !defined(XTD_NO_NAMESPACE)
-using namespace XTD_EXT_HPP_NAMESPACE_CAPITAL;
-using namespace XTD_EXT_HPP_NAMESPACE;
-using namespace XTD_EXT_HPP_NAMESPACE::literals;
+#if !defined(STD_EXT_NO_NAMESPACE)
+using namespace STD_EXT_HPP_NAMESPACE_CAPITAL;
+using namespace STD_EXT_HPP_NAMESPACE;
+using namespace STD_EXT_HPP_NAMESPACE::literals;
 #endif
 
-#endif // XTD_HXX
+#endif // STD_EXTENTION_HXX
