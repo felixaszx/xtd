@@ -42,6 +42,9 @@ namespace XTD_EXT_HPP_NAMESPACE::i_ // internal namespace
         {
             return std::numeric_limits<M>::max();
         }
+
+        template <typename M>
+        inline static const M as = std::numeric_limits<M>::max();
     };
 
     struct min_v_t
@@ -50,8 +53,11 @@ namespace XTD_EXT_HPP_NAMESPACE::i_ // internal namespace
         inline consteval //
         operator M() const
         {
-            return std::numeric_limits<M>::max();
+            return std::numeric_limits<M>::min();
         }
+
+        template <typename M>
+        inline static const M as = std::numeric_limits<M>::min();
     };
 
     struct inf_v_t
@@ -62,6 +68,9 @@ namespace XTD_EXT_HPP_NAMESPACE::i_ // internal namespace
         {
             return std::numeric_limits<M>::infinity();
         }
+
+        template <typename M>
+        inline static const M as = std::numeric_limits<M>::infinity();
     };
 }; // namespace XTD_EXT_HPP_NAMESPACE::i_
 
