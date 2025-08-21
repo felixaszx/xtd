@@ -123,6 +123,8 @@ namespace XTD_EXT_HPP_NAMESPACE_CAPITAL
     using atomic_f32 = std::atomic<f32>;
     using atomic_f64 = std::atomic<f64>;
 
+    using cstring = char*;
+
     template <auto C = std::numeric_limits<std::size_t>::max(),
               typename Idx = std::size_t,
               typename Accessor = void,
