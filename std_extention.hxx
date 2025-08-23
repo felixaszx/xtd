@@ -232,6 +232,7 @@ namespace STD_EXT_HPP_NAMESPACE
     using weak = std::weak_ptr<Tp>;
 
     template <typename U, typename... Args>
+        requires std::constructible_from<U, Args...>
     inline constexpr void //
     set_box(U& box_, Args&&... args)
     {
@@ -239,6 +240,7 @@ namespace STD_EXT_HPP_NAMESPACE
     }
 
     template <typename S, typename... Args>
+        requires std::constructible_from<S, Args...>
     inline constexpr void //
     set_arc(S& arc_, Args&&... args)
     {
