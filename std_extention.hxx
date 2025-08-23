@@ -221,7 +221,7 @@ namespace STD_EXT_HPP_NAMESPACE
         return sizeof(std::forward<T>(container));
     }
 
-    template <typename Tp, typename Dp>
+    template <typename Tp, typename Dp = std::default_delete<Tp>>
     using box = std::unique_ptr<Tp, Dp>;
 
     template <typename Tp>
