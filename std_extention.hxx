@@ -247,7 +247,7 @@ namespace STD_EXT_HPP_NAMESPACE
         arc_ = std::make_shared<typename S::element_type>(std::forward<Args>(args)...);
     }
 
-    class spin_lock
+    class spinlock
     {
       private:
         std::atomic_flag m_ = false;
@@ -258,7 +258,9 @@ namespace STD_EXT_HPP_NAMESPACE
         {
             while (m_.test_and_set(std::memory_order_acquire))
             {
-                m_.wait(true, std::memory_order_relaxed);
+                while (m_.test(std::memory_order_relaxed))
+                {
+                }
             }
         }
 
@@ -266,7 +268,6 @@ namespace STD_EXT_HPP_NAMESPACE
         unlock() noexcept
         {
             m_.clear(std::memory_order_release);
-            m_.notify_one();
         }
 
         inline constexpr bool //
