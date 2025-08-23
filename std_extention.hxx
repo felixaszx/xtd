@@ -18,6 +18,7 @@
 #include <memory>
 #include <type_traits>
 #include <source_location>
+#include <pthread.h>
 
 #define STD_EXT_HPP_NAMESPACE         std_ext
 #define STD_EXT_HPP_NAMESPACE_CAPITAL STD_EXT
@@ -250,31 +251,28 @@ namespace STD_EXT_HPP_NAMESPACE
     class spinlock
     {
       private:
-        std::atomic_flag m_ = false;
+        pthread_spinlock_t lk_ = {};
 
       public:
+        inline constexpr spinlock() noexcept { pthread_spin_init(&lk_, PTHREAD_PROCESS_PRIVATE); }
+        inline constexpr ~spinlock() noexcept { pthread_spin_destroy(&lk_); }
+
+        inline constexpr bool //
+        try_lock [[nodiscard]] () noexcept
+        {
+            return pthread_spin_trylock(&lk_);
+        }
+
         inline constexpr void //
         lock() noexcept
         {
-            while (m_.test_and_set(std::memory_order_acquire))
-            {
-                while (m_.test(std::memory_order_relaxed))
-                {
-                }
-            }
+            pthread_spin_lock(&lk_);
         }
 
         inline constexpr void //
         unlock() noexcept
         {
-            m_.clear(std::memory_order_release);
-        }
-
-        inline constexpr bool //
-        try_lock [[nodiscard]] () noexcept
-        {
-            return !m_.test(std::memory_order_relaxed) && //
-                   !m_.test_and_set(std::memory_order_acquire);
+            pthread_spin_unlock(&lk_);
         }
     };
 
