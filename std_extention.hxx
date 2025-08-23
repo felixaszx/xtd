@@ -15,6 +15,7 @@
 #include <print>
 #include <atomic>
 #include <chrono>
+#include <memory>
 #include <type_traits>
 #include <source_location>
 
@@ -218,6 +219,20 @@ namespace STD_EXT_HPP_NAMESPACE
     sizeof2 [[nodiscard]] (T&& container)
     {
         return sizeof(std::forward<T>(container));
+    }
+
+    template <typename U, typename... Args>
+    inline constexpr void //
+    set_unique(U& unique, Args... args)
+    {
+        unique = std::make_unique<typename U::element_type>(std::forward<Args>(args)...);
+    }
+
+    template <typename S, typename... Args>
+    inline constexpr void //
+    set_shared(S& shared, Args... args)
+    {
+        shared = std::make_shared<typename S::element_type>(std::forward<Args>(args)...);
     }
 
     template <typename... Args>
