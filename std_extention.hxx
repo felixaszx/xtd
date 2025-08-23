@@ -94,8 +94,8 @@ namespace STD_EXT_HPP_NAMESPACE_CAPITAL
     using char32 = char32_t;
     using wchar = wchar_t;
 
-    using f32 = std::float_t;
-    using f64 = std::double_t;
+    using f32 = float;
+    using f64 = double;
     using flong = long double;
 
     inline static const std_ext::i_::max_v_t max_v = {};
@@ -225,7 +225,13 @@ namespace STD_EXT_HPP_NAMESPACE
     using box = std::unique_ptr<Tp, Dp>;
 
     template <typename Tp>
-    using rc = std::shared_ptr<Tp>;
+    using c_delete = decltype([](Tp* p) noexcept { free(p); });
+
+    template <typename Tp>
+    using arc = std::shared_ptr<Tp>;
+
+    template <typename Tp>
+    using weak = std::weak_ptr<Tp>;
 
     template <typename U, typename... Args>
     inline constexpr void //
@@ -236,10 +242,90 @@ namespace STD_EXT_HPP_NAMESPACE
 
     template <typename S, typename... Args>
     inline constexpr void //
-    set_rc(S& rc_, Args&&... args)
+    set_arc(S& arc_, Args&&... args)
     {
-        rc_ = std::make_shared<typename S::element_type>(std::forward<Args>(args)...);
+        arc_ = std::make_shared<typename S::element_type>(std::forward<Args>(args)...);
     }
+
+    class spin_lock
+    {
+      public:
+        class guard
+        {
+            friend spin_lock;
+            guard(const guard&) = delete;
+            guard(guard&&) = delete;
+            guard& operator=(const guard&) = delete;
+            guard& operator=(guard&&) = delete;
+
+          private:
+            spin_lock* lk_ = nullptr;
+
+            inline constexpr guard(spin_lock* lk) noexcept
+                : lk_(lk)
+            {
+            }
+
+          public:
+            inline constexpr //
+            operator bool() noexcept
+            {
+                return valid();
+            };
+
+            inline constexpr ~guard() noexcept //
+            {
+                unlock();
+            }
+
+            inline constexpr bool //
+            valid() noexcept
+            {
+                return lk_ != nullptr;
+            }
+
+            inline constexpr void //
+            unlock() noexcept
+            {
+                if (lk_ != nullptr)
+                {
+                    lk_->flag_.clear(std::memory_order_release);
+                    lk_ = nullptr;
+                }
+            }
+        };
+
+      private:
+        std::atomic_flag flag_ = false;
+
+      public:
+        inline constexpr guard //
+        lock [[nodiscard]] () noexcept
+        {
+            while (true)
+            {
+                if (!flag_.test_and_set(std::memory_order_acquire))
+                {
+                    return this;
+                }
+
+                while (flag_.test(std::memory_order_relaxed))
+                {
+                }
+            }
+        }
+
+        inline constexpr guard //
+        try_lock [[nodiscard]] () noexcept
+        {
+            if (!flag_.test(std::memory_order_relaxed) && //
+                !flag_.test_and_set(std::memory_order_acquire))
+            {
+                return this;
+            }
+            return nullptr;
+        }
+    };
 
     template <typename... Args>
     struct logln
