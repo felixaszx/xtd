@@ -223,14 +223,14 @@ namespace STD_EXT_HPP_NAMESPACE
 
     template <typename U, typename... Args>
     inline constexpr void //
-    set_unique(U& unique, Args... args)
+    set_unique(U& unique, Args&&... args)
     {
         unique = std::make_unique<typename U::element_type>(std::forward<Args>(args)...);
     }
 
     template <typename S, typename... Args>
     inline constexpr void //
-    set_shared(S& shared, Args... args)
+    set_shared(S& shared, Args&&... args)
     {
         shared = std::make_shared<typename S::element_type>(std::forward<Args>(args)...);
     }
