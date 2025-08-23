@@ -249,81 +249,31 @@ namespace STD_EXT_HPP_NAMESPACE
 
     class spin_lock
     {
-      public:
-        class guard
-        {
-            friend spin_lock;
-            guard(const guard&) = delete;
-            guard(guard&&) = delete;
-            guard& operator=(const guard&) = delete;
-            guard& operator=(guard&&) = delete;
-
-          private:
-            spin_lock* lk_ = nullptr;
-
-            inline constexpr guard(spin_lock* lk) noexcept
-                : lk_(lk)
-            {
-            }
-
-          public:
-            inline constexpr //
-            operator bool() noexcept
-            {
-                return valid();
-            };
-
-            inline constexpr ~guard() noexcept //
-            {
-                unlock();
-            }
-
-            inline constexpr bool //
-            valid() noexcept
-            {
-                return lk_ != nullptr;
-            }
-
-            inline constexpr void //
-            unlock() noexcept
-            {
-                if (lk_ != nullptr)
-                {
-                    lk_->flag_.clear(std::memory_order_release);
-                    lk_ = nullptr;
-                }
-            }
-        };
-
       private:
-        std::atomic_flag flag_ = false;
+        std::atomic_flag m_ = false;
 
       public:
-        inline constexpr guard //
-        lock [[nodiscard]] () noexcept
+        inline constexpr void //
+        lock() noexcept
         {
-            while (true)
+            while (m_.test_and_set(std::memory_order_acquire))
             {
-                if (!flag_.test_and_set(std::memory_order_acquire))
-                {
-                    return this;
-                }
-
-                while (flag_.test(std::memory_order_relaxed))
-                {
-                }
+                m_.wait(true, std::memory_order_relaxed);
             }
         }
 
-        inline constexpr guard //
+        inline constexpr void //
+        unlock() noexcept
+        {
+            m_.clear(std::memory_order_release);
+            m_.notify_one();
+        }
+
+        inline constexpr bool //
         try_lock [[nodiscard]] () noexcept
         {
-            if (!flag_.test(std::memory_order_relaxed) && //
-                !flag_.test_and_set(std::memory_order_acquire))
-            {
-                return this;
-            }
-            return nullptr;
+            return !m_.test(std::memory_order_relaxed) && //
+                   !m_.test_and_set(std::memory_order_acquire);
         }
     };
 
