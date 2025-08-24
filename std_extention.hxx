@@ -254,12 +254,23 @@ namespace STD_EXT_HPP_NAMESPACE
         std::atomic_flag m_ = false;
 
       public:
-        inline constexpr void //
-        lock() noexcept
+        inline constexpr bool //
+        try_lock [[nodiscard]] () noexcept
         {
-            while (m_.test_and_set(std::memory_order_acquire))
+            return !(m_.test(std::memory_order_relaxed) || //
+                     m_.test_and_set(std::memory_order_acquire));
+        }
+
+        inline constexpr void //
+        lock(std::size_t spin_before_sleep = 16) noexcept
+        {
+            for (std::size_t spins = 0; !try_lock(); spins++)
             {
-                m_.wait(true, std::memory_order_relaxed);
+                if (spins == spin_before_sleep)
+                {
+                    timespec time = {0, 1};
+                    nanosleep(&time, nullptr);
+                }
             }
         }
 
@@ -267,14 +278,6 @@ namespace STD_EXT_HPP_NAMESPACE
         unlock() noexcept
         {
             m_.clear(std::memory_order_release);
-            m_.notify_one();
-        }
-
-        inline constexpr bool //
-        try_lock [[nodiscard]] () noexcept
-        {
-            return !m_.test(std::memory_order_relaxed) && //
-                   !m_.test_and_set(std::memory_order_acquire);
         }
     };
 
