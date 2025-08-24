@@ -248,6 +248,7 @@ namespace STD_EXT_HPP_NAMESPACE
         arc_ = std::make_shared<typename S::element_type>(std::forward<Args>(args)...);
     }
 
+    // This outperform libc++'s std::mutex on Windows 10/11, max at 16 thread Ryzen 7700X, 250M-260M operations/s
     class spinlock
     {
       private:
