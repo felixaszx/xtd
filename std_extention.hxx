@@ -251,28 +251,30 @@ namespace STD_EXT_HPP_NAMESPACE
     class spinlock
     {
       private:
-        pthread_spinlock_t lk_ = {};
+        std::atomic_flag m_ = false;
 
       public:
-        inline constexpr spinlock() noexcept { pthread_spin_init(&lk_, PTHREAD_PROCESS_PRIVATE); }
-        inline constexpr ~spinlock() noexcept { pthread_spin_destroy(&lk_); }
-
-        inline constexpr bool //
-        try_lock [[nodiscard]] () noexcept
-        {
-            return pthread_spin_trylock(&lk_);
-        }
-
         inline constexpr void //
         lock() noexcept
         {
-            pthread_spin_lock(&lk_);
+            while (m_.test_and_set(std::memory_order_acquire))
+            {
+                m_.wait(true, std::memory_order_relaxed);
+            }
         }
 
         inline constexpr void //
         unlock() noexcept
         {
-            pthread_spin_unlock(&lk_);
+            m_.clear(std::memory_order_release);
+            m_.notify_one();
+        }
+
+        inline constexpr bool //
+        try_lock [[nodiscard]] () noexcept
+        {
+            return !m_.test(std::memory_order_relaxed) && //
+                   !m_.test_and_set(std::memory_order_acquire);
         }
     };
 
