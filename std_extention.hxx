@@ -16,6 +16,7 @@
 #include <atomic>
 #include <chrono>
 #include <memory>
+#include <thread>
 #include <type_traits>
 #include <source_location>
 #include <pthread.h>
@@ -248,7 +249,7 @@ namespace STD_EXT_HPP_NAMESPACE
         arc_ = std::make_shared<typename S::element_type>(std::forward<Args>(args)...);
     }
 
-    // This outperform libc++'s std::mutex on Windows 10/11, max at 16 thread Ryzen 7700X, 250M-260M operations/s
+    // This outperform libc++'s std::mutex (~2M /s) on Windows 10/11, max at 16 thread Ryzen 7700X, 64M-718M /s
     class spinlock
     {
       private:
@@ -265,12 +266,13 @@ namespace STD_EXT_HPP_NAMESPACE
         inline constexpr void //
         lock(std::size_t spin_before_sleep = 16) noexcept
         {
+            using namespace std::chrono_literals;
             for (std::size_t spins = 0; !try_lock(); spins++)
             {
                 if (spins == spin_before_sleep)
                 {
-                    timespec time = {0, 1};
-                    nanosleep(&time, nullptr);
+                    spins = 0;
+                    std::this_thread::sleep_for(1ns);
                 }
             }
         }
