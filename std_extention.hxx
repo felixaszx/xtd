@@ -233,20 +233,36 @@ namespace STD_EXT_HPP_NAMESPACE
     template <typename Tp>
     using weak = std::weak_ptr<Tp>;
 
-    template <typename U, typename... Args>
-        requires std::constructible_from<typename U::element_type, Args...>
-    inline constexpr void //
-    set_box(U& box_, Args&&... args)
+    template <typename T, typename D = std::default_delete<T>, typename... Args>
+        requires std::constructible_from<T, Args...>
+    inline constexpr box<T, D> //
+    new_box(Args&&... args)
     {
-        box_ = std::make_unique<typename U::element_type>(std::forward<Args>(args)...);
+        return box<T, D>(new T(std::forward<Args>(args)...));
     }
 
-    template <typename S, typename... Args>
-        requires std::constructible_from<typename S::element_type, Args...>
+    template <typename T, typename D = std::default_delete<T>, typename... Args>
+        requires std::constructible_from<T, Args...>
     inline constexpr void //
-    set_arc(S& arc_, Args&&... args)
+    set_box(box<T, D>& box, Args&&... args)
     {
-        arc_ = std::make_shared<typename S::element_type>(std::forward<Args>(args)...);
+        box.reset(new T(std::forward<Args>(args)...));
+    }
+
+    template <typename T, typename... Args>
+        requires std::constructible_from<T, Args...>
+    inline constexpr arc<T> //
+    new_arc(Args&&... args)
+    {
+        return arc<T>(new T(std::forward<Args>(args)...));
+    }
+
+    template <typename T, typename... Args>
+        requires std::constructible_from<T, Args...>
+    inline constexpr void //
+    set_arc(arc<T>& arc, Args&&... args)
+    {
+        arc.reset(new T(std::forward<Args>(args)...));
     }
 
     // This outperform libc++'s std::mutex (~2M /s) on Windows 10/11, max at 16 thread Ryzen 7700X, 64M-718M /s
