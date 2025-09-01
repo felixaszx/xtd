@@ -73,7 +73,7 @@ namespace STD_EXT_HPP_NAMESPACE::i_ // internal namespace
         inline static const M as = std::numeric_limits<M>::max();
     };
 
-    struct min_v_t
+    struct min_v_t : public limit_v_t<min_v_t>
     {
         template <typename M>
         inline consteval //
@@ -86,7 +86,7 @@ namespace STD_EXT_HPP_NAMESPACE::i_ // internal namespace
         inline static const M as = std::numeric_limits<M>::min();
     };
 
-    struct inf_v_t
+    struct inf_v_t : public limit_v_t<inf_v_t>
     {
         template <typename M>
         inline consteval //
