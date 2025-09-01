@@ -32,7 +32,35 @@ namespace STD_EXT_HPP_NAMESPACE::i_ // internal namespace
         using F::operator()...;
     };
 
-    struct max_v_t
+    template <typename L>
+    struct limit_v_t
+    {
+        template <typename M>
+        inline static const M as = L::template as<M>;
+    };
+
+    template <typename M, typename L>
+    inline constexpr bool //
+    operator<(const M& x, const limit_v_t<L>& y)
+    {
+        return x < limit_v_t<L>::template as<M>;
+    }
+
+    template <typename M, typename L>
+    inline constexpr bool //
+    operator>(const M& x, const limit_v_t<L>& y)
+    {
+        return x > limit_v_t<L>::template as<M>;
+    }
+
+    template <typename M, typename L>
+    inline constexpr bool //
+    operator==(const M& x, const limit_v_t<L>& y)
+    {
+        return x == limit_v_t<L>::template as<M>;
+    }
+
+    struct max_v_t : public limit_v_t<max_v_t>
     {
         template <typename M>
         inline consteval //
