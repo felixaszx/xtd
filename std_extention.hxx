@@ -49,9 +49,23 @@ namespace STD_EXT_HPP_NAMESPACE::i_ // internal namespace
 
     template <typename M, typename L>
     inline constexpr bool //
+    operator<=(const M& x, const limit_v_t<L>& y)
+    {
+        return x <= limit_v_t<L>::template as<M>;
+    }
+
+    template <typename M, typename L>
+    inline constexpr bool //
     operator>(const M& x, const limit_v_t<L>& y)
     {
         return x > limit_v_t<L>::template as<M>;
+    }
+
+    template <typename M, typename L>
+    inline constexpr bool //
+    operator>=(const M& x, const limit_v_t<L>& y)
+    {
+        return x >= limit_v_t<L>::template as<M>;
     }
 
     template <typename M, typename L>
