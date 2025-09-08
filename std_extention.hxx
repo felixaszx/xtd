@@ -17,6 +17,7 @@
 #include <chrono>
 #include <memory>
 #include <thread>
+#include <iostream>
 #include <type_traits>
 #include <source_location>
 #include <pthread.h>
@@ -249,11 +250,18 @@ namespace STD_EXT_HPP_NAMESPACE
         return sizeof(std::forward<T>(container));
     }
 
+    template <typename T>
+    struct c_delete
+    {
+        inline static constexpr void //
+        operator()(T* p) noexcept
+        {
+            free(p);
+        }
+    };
+
     template <typename Tp, typename Dp = std::default_delete<Tp>>
     using box = std::unique_ptr<Tp, Dp>;
-
-    template <typename Tp>
-    using c_delete = decltype([](Tp* p) noexcept { free(p); });
 
     template <typename Tp>
     using arc = std::shared_ptr<Tp>;
@@ -334,9 +342,9 @@ namespace STD_EXT_HPP_NAMESPACE
         inline constexpr //
             logln(std::string_view format, Args&&... msg, std::source_location src = std::source_location::current())
         {
-            std::println("[{}] {} ({}:{}:{})", "LOG",                         //
-                         std::vformat(format, std::make_format_args(msg...)), //
-                         src.file_name(), src.line(), src.column());
+            std::cout << std::format("[{}] {} ({}:{}:{})\n", "LOG",                       //
+                                     std::vformat(format, std::make_format_args(msg...)), //
+                                     src.file_name(), src.line(), src.column());
         }
     };
 
@@ -346,9 +354,9 @@ namespace STD_EXT_HPP_NAMESPACE
         inline constexpr //
             errln(std::string_view format, Args&&... msg, std::source_location src = std::source_location::current())
         {
-            std::println(stderr, "[{}] {} ({}:{}:{})", "ERROR",               //
-                         std::vformat(format, std::make_format_args(msg...)), //
-                         src.file_name(), src.line(), src.column());
+            std::cerr << std::format("[{}] {} ({}:{}:{})\n", "ERROR",                     //
+                                     std::vformat(format, std::make_format_args(msg...)), //
+                                     src.file_name(), src.line(), src.column());
         }
     };
 
@@ -358,9 +366,9 @@ namespace STD_EXT_HPP_NAMESPACE
         inline constexpr //
             warnln(std::string_view format, Args&&... msg, std::source_location src = std::source_location::current())
         {
-            std::println("[{}] {} ({}:{}:{})", "WARNING",                     //
-                         std::vformat(format, std::make_format_args(msg...)), //
-                         src.file_name(), src.line(), src.column());
+            std::cout << std::format("[{}] {} ({}:{}:{})\n", "WARNING",                   //
+                                     std::vformat(format, std::make_format_args(msg...)), //
+                                     src.file_name(), src.line(), src.column());
         }
     };
 
