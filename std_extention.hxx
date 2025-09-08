@@ -170,13 +170,17 @@ namespace STD_EXT_HPP_NAMESPACE_CAPITAL
         inline static const ts_idx zero_idx = static_cast<Idx>(0);
 
       private:
-        Idx idx_ = null_idx;
+        Idx idx_ = static_cast<Idx>(-1);
         inline constexpr ts_idx(Idx i) { idx_ = i; }
 
       public:
         inline constexpr operator bool() const noexcept { return null_idx.idx_ != idx_; }
         inline constexpr operator Idx() const noexcept { return idx_; }
         inline constexpr bool operator==(const ts_idx& x) const noexcept { return idx_ == x.idx_; }
+        inline constexpr bool operator<=(const ts_idx& x) const noexcept { return idx_ <= x.idx_; }
+        inline constexpr bool operator>=(const ts_idx& x) const noexcept { return idx_ >= x.idx_; }
+        inline constexpr bool operator<(const ts_idx& x) const noexcept { return idx_ < x.idx_; }
+        inline constexpr bool operator>(const ts_idx& x) const noexcept { return idx_ > x.idx_; }
         inline static consteval decltype(C) idx_class() noexcept { return C; };
         inline const ts_idx off_by(Idx off) const noexcept { return *this ? ts_idx(idx_ + off) : null_idx; };
 
