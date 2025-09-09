@@ -180,15 +180,15 @@ namespace STD_EXT_HPP_NAMESPACE_CAPITAL
         friend Accessor;
 
       public:
-        inline static const ts_idx null_idx = static_cast<Idx>(-1);
-        inline static const ts_idx zero_idx = static_cast<Idx>(0);
+        inline static const ts_idx null = static_cast<Idx>(-1);
+        inline static const ts_idx zero = static_cast<Idx>(0);
 
       private:
         Idx idx_ = static_cast<Idx>(-1);
         inline constexpr ts_idx(Idx i) { idx_ = i; }
 
       public:
-        inline constexpr operator bool() const noexcept { return null_idx.idx_ != idx_; }
+        inline constexpr operator bool() const noexcept { return null.idx_ != idx_; }
         inline constexpr operator Idx() const noexcept { return idx_; }
         inline constexpr bool operator==(const ts_idx& x) const noexcept { return idx_ == x.idx_; }
         inline constexpr bool operator<=(const ts_idx& x) const noexcept { return idx_ <= x.idx_; }
@@ -201,7 +201,7 @@ namespace STD_EXT_HPP_NAMESPACE_CAPITAL
         inline constexpr bool operator<(const Idx& x) const noexcept { return idx_ < x; }
         inline constexpr bool operator>(const Idx& x) const noexcept { return idx_ > x; }
         inline static consteval decltype(C) idx_class() noexcept { return C; };
-        inline const ts_idx off_by(long long off) const noexcept { return *this ? ts_idx(idx_ + off) : null_idx; };
+        inline const ts_idx off_by(long long off) const noexcept { return *this ? ts_idx(idx_ + off) : null; };
 
         ts_idx() = default;
     };
