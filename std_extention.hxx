@@ -195,6 +195,11 @@ namespace STD_EXT_HPP_NAMESPACE_CAPITAL
         inline constexpr bool operator>=(const ts_idx& x) const noexcept { return idx_ >= x.idx_; }
         inline constexpr bool operator<(const ts_idx& x) const noexcept { return idx_ < x.idx_; }
         inline constexpr bool operator>(const ts_idx& x) const noexcept { return idx_ > x.idx_; }
+        inline constexpr bool operator==(const Idx& x) const noexcept { return idx_ == x; }
+        inline constexpr bool operator<=(const Idx& x) const noexcept { return idx_ <= x; }
+        inline constexpr bool operator>=(const Idx& x) const noexcept { return idx_ >= x; }
+        inline constexpr bool operator<(const Idx& x) const noexcept { return idx_ < x; }
+        inline constexpr bool operator>(const Idx& x) const noexcept { return idx_ > x; }
         inline static consteval decltype(C) idx_class() noexcept { return C; };
         inline const ts_idx off_by(Idx off) const noexcept { return *this ? ts_idx(idx_ + off) : null_idx; };
 
